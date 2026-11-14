@@ -1,0 +1,22 @@
+# Giorgi Khvichia
+
+> The portfolio of Giorgi Khvichia, a full-stack software engineer in Tbilisi, Georgia. He builds whole products: web platforms, 3D experiences, AI tools and hardware. Founder of shemoqmedi.space.
+
+## This site
+
+- [Portfolio](https://khvichia.shemoqmedi.space/): one page with his skills and stack, the sites he has built, a few photos, and how to reach him
+- [CV, English (PDF)](https://khvichia.shemoqmedi.space/cv/Giorgi-Khvichia-CV.pdf): experience, projects, education, awards and technical skills
+- [CV, Georgian (PDF)](https://khvichia.shemoqmedi.space/cv/Giorgi-Khvichia-CV-KA.pdf): the same CV in Georgian
+
+## Work
+
+- [shemoqmedi.space](https://www.shemoqmedi.space/): web design awards
+- [The Room by Kencho Group](https://room.kenchogroup.ge/): a 3D furniture room
+- [Kencho Group](https://www.kenchogroup.ge/): a custom furniture studio
+- [Kalami](https://www.kalami.space/): a learning platform for universities
+
+## Contact
+
+- [GitHub](https://github.com/GioGio2004)
+- [LinkedIn](https://www.linkedin.com/in/giorgi-khvichia-a73755254/)
+- [Email](mailto:giorgi.khvichia18@gmail.com)

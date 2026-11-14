@@ -3,7 +3,7 @@ import { hero } from '../content/hero'
 import { footerWord, road } from '../content/road'
 import { scrollLength } from './timeline'
 
-// three.js is only needed for the letters, so it loads apart from the first screen.
+// three.js is only needed for the letters, so it is a separate file, fetched when the footer comes near (see `near`).
 const Letters = lazy(() => import('./Letters'))
 
 // One photo per letter: the last photos of the side scroll, in its order.
@@ -38,6 +38,8 @@ export function Footer() {
   const stage = useRef<HTMLDivElement>(null)
   // True from one screen before the footer shows until one screen after it has gone.
   const [inView, setInView] = useState(false)
+  /** True from the first time the footer is within four screens of the viewport: only then are the letters fetched and started, well before they are needed. */
+  const [near, setNear] = useState(false)
   // True once the orange has taken over the stage.
   const [flooded, setFlooded] = useState(false)
   const taken = useRef(false)
@@ -45,8 +47,18 @@ export function Footer() {
   useEffect(() => {
     const observer = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), { rootMargin: '100% 0px' })
     observer.observe(section.current!)
+    const approach = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return
+        setNear(true)
+        approach.disconnect()
+      },
+      { rootMargin: '400% 0px' },
+    )
+    approach.observe(section.current!)
     return () => {
       observer.disconnect()
+      approach.disconnect()
       document.documentElement.removeAttribute('data-handoff')
     }
   }, [])
@@ -88,9 +100,11 @@ export function Footer() {
         <div className="footer-flood" aria-hidden />
         <div className="footer-letters" data-live={inView || undefined} aria-hidden>
           <LettersBoundary fallback={<p className="footer-word">{word}</p>}>
-            <Suspense fallback={null}>
-              <Letters word={word} photos={photos} section={section} onTaken={onTaken} onEnding={onEnding} inView={inView} />
-            </Suspense>
+            {near ? (
+              <Suspense fallback={null}>
+                <Letters word={word} photos={photos} section={section} onTaken={onTaken} onEnding={onEnding} inView={inView} />
+              </Suspense>
+            ) : null}
           </LettersBoundary>
         </div>
 

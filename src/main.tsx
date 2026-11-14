@@ -3,11 +3,18 @@ import '@fontsource/anton'
 import './styles.css'
 
 import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
+import { createRoot, hydrateRoot } from 'react-dom/client'
 import { App } from './App'
 
-createRoot(document.getElementById('root')!).render(
+const root = document.getElementById('root')!
+const app = (
   <StrictMode>
     <App />
-  </StrictMode>,
+  </StrictMode>
 )
+
+// The built site ships with the page already written into the HTML (see scripts/prerender.mjs), so the first paint
+// does not wait for this script; here the script only takes that page over. While developing there is nothing in
+// the HTML yet, and the page is drawn from scratch.
+if (root.hasChildNodes()) hydrateRoot(root, app)
+else createRoot(root).render(app)

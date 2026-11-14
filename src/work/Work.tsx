@@ -2,7 +2,7 @@ import { Component, lazy, Suspense, useCallback, useEffect, useRef, useState, ty
 import { sites } from '../content/sites'
 import { BAR, openWindow } from './layout'
 
-// three.js is only needed for the gallery, so it loads apart from the first screen.
+// three.js is only needed for the gallery, so it is a separate file, fetched when the section comes near (see `near`).
 const Gallery = lazy(() => import('./Gallery'))
 
 const two = (n: number) => String(n).padStart(2, '0')
@@ -33,6 +33,8 @@ export function Work() {
   const section = useRef<HTMLElement>(null)
   const stage = useRef<HTMLDivElement>(null)
   const [inView, setInView] = useState(false)
+  /** True from the first time the section is within a screen and a half of the viewport: only then is the gallery fetched and started. */
+  const [near, setNear] = useState(false)
   const [active, setActive] = useState(0)
   const [open, setOpen] = useState(false)
   /** True while the opened panel is fully flat, so the live site can sit on it. */
@@ -47,10 +49,20 @@ export function Work() {
     const element = section.current!
     const observer = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), { threshold: 0.2 })
     observer.observe(element)
+    const approach = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return
+        setNear(true)
+        approach.disconnect()
+      },
+      { rootMargin: '150% 0px' },
+    )
+    approach.observe(element)
     const resize = new ResizeObserver(() => setWin(openWindow(element.clientWidth, element.clientHeight)))
     resize.observe(element)
     return () => {
       observer.disconnect()
+      approach.disconnect()
       resize.disconnect()
     }
   }, [])
@@ -98,9 +110,11 @@ export function Work() {
             </ul>
           }
         >
-          <Suspense fallback={null}>
-            <Gallery sites={sites} stage={stage} inView={inView} open={open} onActive={setActive} onOpen={onOpen} onFlat={onFlat} />
-          </Suspense>
+          {near ? (
+            <Suspense fallback={null}>
+              <Gallery sites={sites} stage={stage} inView={inView} open={open} onActive={setActive} onOpen={onOpen} onFlat={onFlat} />
+            </Suspense>
+          ) : null}
         </GalleryBoundary>
       </div>
 

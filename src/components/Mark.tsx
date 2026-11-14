@@ -4,7 +4,7 @@ import { useOnDark } from '../lib/useOnDark'
 export function Mark() {
   const onDark = useOnDark(32)
   return (
-    <a className="mark" href="#top" data-tone={onDark ? 'light' : 'dark'} aria-label="Giorgi Khvichia, back to the top">
+    <a className="mark" href="#top" data-tone={onDark ? 'light' : 'dark'} aria-label="GK: Giorgi Khvichia, back to the top">
       GK
     </a>
   )
