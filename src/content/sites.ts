@@ -18,10 +18,13 @@ import shemoqmedi from '../assets/sites/shemoqmedi.webp'
  *   shot    a picture of the site's first screen
  *   long    a picture of the whole page, shown instead of the live site when
  *           the site cannot be shown live
- *   live    whether the site lets other pages show it inside a frame.
- *           shemoqmedi.space and kalami.space currently send a header that
- *           forbids it (Content-Security-Policy: frame-ancestors 'self');
- *           once their servers allow this site's address, set `live: true`.
+ *   live    whether the site lets this page show it inside a frame.
+ *           shemoqmedi.space allows it only from this site's real addresses
+ *           (see FRAME_ANCESTORS in its next.config.ts), so it is live once
+ *           the site is deployed and a picture while working on it locally.
+ *           kalami.space still sends a header that forbids it
+ *           (Content-Security-Policy: frame-ancestors 'self'); once its
+ *           server allows this site's address, set `live: true`.
  *
  * The pictures were taken with a headless browser at 1440 x 900.
  */
@@ -36,7 +39,7 @@ export const sites: Site[] = [
     kind: 'Web design awards',
     shot: shemoqmedi,
     long: shemoqmediLong,
-    live: false,
+    live: !import.meta.env.DEV,
   },
   {
     slug: 'kencho-room',
