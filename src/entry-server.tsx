@@ -20,6 +20,16 @@ for (const item of work) for (const picture of item.pictures) pictureFiles(item.
 /** The addresses to build: "/", the four case studies and "/404". */
 export { paths }
 
+/**
+ * One line about each case study for public/llms.txt (the page that tells AI assistants what is on this site). The
+ * build writes them from work.ts, so that file can never say something about a project that its own page does not.
+ */
+export const caseLines = work.map((item) => {
+  const head = headFor({ kind: 'case', work: item })
+  const list = (text: string) => text.split(' · ').join(', ')
+  return `- [${item.title}, case study](${head.canonical}): ${head.description} Role: ${list(item.role)}. Stage: ${list(item.status)}.`
+})
+
 export type Rendered = {
   /** The page's HTML, to go inside #root. */
   html: string

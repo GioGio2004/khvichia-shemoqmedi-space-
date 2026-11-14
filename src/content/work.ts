@@ -114,8 +114,8 @@ export const work: Work[] = [
     cta: { preview: 'Explore Shemoqmedi', visit: 'Visit live platform' },
     site: site('shemoqmedi'),
     media: {
-      hero: 'browse',
-      gallery: ['home', 'nominees', 'listing', 'scores', 'badges', 'home-mobile', 'browse-mobile'],
+      hero: 'home',
+      gallery: ['browse', 'nominees', 'listing', 'scores', 'badges', 'home-mobile', 'browse-mobile'],
     },
     pictures: [
       {
@@ -430,6 +430,7 @@ export const work: Work[] = [
     cta: { preview: 'Explore Kalami', visit: 'View the platform' },
     site: site('kalami'),
     media: {
+      // These are the public pages, which draw the product rather than show it. TODO(owner) D8: real screens need a demo account.
       hero: 'home',
       gallery: ['sandbox', 'live-class', 'studio', 'levels', 'staff', 'home-mobile', 'notebook-mobile'],
     },
@@ -448,7 +449,7 @@ export const work: Work[] = [
         width: 1440,
         height: 900,
         alt: 'An illustrative view of the code exercise: an HTML file in an editor, its preview beside it and checks under it.',
-        caption: 'Code exercise',
+        caption: 'Code exercise, as drawn on the public page',
       },
       {
         name: 'live-class',
@@ -456,7 +457,7 @@ export const work: Work[] = [
         width: 1440,
         height: 900,
         alt: 'An illustrative view of a live assessment: a list of students with their progress and flags that need attention.',
-        caption: 'Live assessment',
+        caption: 'Live assessment, as drawn on the public page',
       },
       {
         name: 'studio',
@@ -464,7 +465,7 @@ export const work: Work[] = [
         width: 1440,
         height: 900,
         alt: 'The course studio on the lecturers’ page: a course laid out in weeks, with lessons, tasks, a quiz and an exam.',
-        caption: 'Course studio',
+        caption: 'Course studio, as drawn on the lecturers’ page',
       },
       {
         name: 'levels',
@@ -496,7 +497,7 @@ export const work: Work[] = [
         width: 780,
         height: 1688,
         alt: 'An illustrative view of a student’s notebook on a phone: an open quiz and two courses with their progress.',
-        caption: 'Notebook, phone',
+        caption: 'Notebook on a phone, as drawn on the public page',
       },
     ],
     next: 'shemoqmedi',

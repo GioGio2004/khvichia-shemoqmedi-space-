@@ -6,12 +6,13 @@ import { two } from './fit'
  * many this is, and the way back to all of them. It is a solid tag, like the
  * monogram, so it reads over anything that scrolls under it, and it turns
  * light over the dark parts of the page the same way. The "not found" page
- * has no number, only the way back.
+ * has no number, only the way back. Root.tsx puts it in one landmark with
+ * the monogram.
  */
 export function Crumb({ index, total }: { index?: number; total: number }) {
   const onDark = useOnDark(32)
   return (
-    <nav className="case-crumb" aria-label="Where you are" data-tone={onDark ? 'light' : 'dark'}>
+    <div className="case-crumb" data-tone={onDark ? 'light' : 'dark'}>
       {index ? (
         <span className="case-crumb-index">
           <span>Work / </span>
@@ -19,6 +20,6 @@ export function Crumb({ index, total }: { index?: number; total: number }) {
         </span>
       ) : null}
       <a href="/#work">All work</a>
-    </nav>
+    </div>
   )
 }

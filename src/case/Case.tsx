@@ -12,7 +12,10 @@ import { useReveal } from './useReveal'
 const FULL = '100vw'
 const WIDE = '(min-width: 901px) 75vw, 100vw'
 const HALF = '(min-width: 761px) 50vw, 100vw'
-const PHONE = '(min-width: 761px) 25vw, 50vw'
+const PHONE = '(min-width: 1101px) 25vw, (min-width: 761px) 50vw, 80vw'
+
+/** A challenge whose first sentence is longer than this is set a size smaller, so it stays a statement and does not become a wall of display type. */
+const LONG = 60
 
 type Row = { kind: 'full' | 'pair' | 'phones'; pictures: Picture[] }
 
@@ -61,6 +64,19 @@ export function Case({ item }: { item: Work }) {
     return found
   }
   const hero = item.media.hero ? picture(item.media.hero) : null
+  // The same screen taken on a phone, when there is one: phones show the top of it instead of a desktop picture shrunk to a quarter.
+  const heroPhone = hero ? item.pictures.find((entry) => entry.kind === 'mobile' && entry.name === `${hero.name}-mobile`) : undefined
+
+  // The contributions that are roles go into the diagram; the list under it holds the others.
+  const roles = (look.roles ?? []).map((title) => {
+    const found = item.contributions.find((entry) => entry.title === title)
+    if (!found) throw new Error(`look.ts: ${item.slug} names a role "${title}" that is not a contribution in work.ts.`)
+    return found
+  })
+  const built = item.contributions.filter((entry) => !roles.includes(entry))
+  // Cells stand two or three across, whichever leaves no cell empty at the end.
+  const cols = built.length % 3 !== 0 && built.length % 2 === 0 ? 2 : 3
+
   // In the grid of cells a picture has no room beside its text, so those pictures lead the sequence instead, under the name of what they show.
   const shown = look.built === 'cells' ? item.contributions.filter((entry) => entry.media) : []
   const taken = new Set([item.media.hero, ...item.contributions.map((entry) => entry.media)])
@@ -90,7 +106,12 @@ export function Case({ item }: { item: Work }) {
   return (
     <div ref={root} className="case" data-project={item.slug} data-bleed={look.bleed || undefined}>
       <main id="top">
-      <section className="case-hero" {...ground(look.hero)} data-stage={hero && look.stage !== 'none' ? look.stage : undefined}>
+      <section
+        className="case-hero"
+        {...ground(look.hero)}
+        data-stage={hero && look.stage !== 'none' ? look.stage : undefined}
+        data-phone={heroPhone ? '' : undefined}
+      >
         <div className="case-hero-head">
           <div className="case-lines" aria-hidden>
             <i />
@@ -114,7 +135,7 @@ export function Case({ item }: { item: Work }) {
             {look.stage !== 'none' ? (
               <div className="case-stage" {...ground(look.stage)} style={{ '--ratio': hero.height / hero.width } as CSSProperties} aria-hidden />
             ) : null}
-            <Shot slug={item.slug} picture={hero} sizes={FULL} eager reveal={false} className="case-hero-shot" />
+            <Shot slug={item.slug} picture={hero} phone={heroPhone} sizes={FULL} eager reveal={false} className="case-hero-shot" />
           </>
         ) : null}
       </section>
@@ -151,7 +172,7 @@ export function Case({ item }: { item: Work }) {
 
       <section className="case-block case-challenge" {...ground(look.challenge)}>
         <Label n={++count}>The challenge</Label>
-        <p className="case-statement" data-reveal="up">
+        <p className="case-statement" data-long={claim.length > LONG ? '' : undefined} data-reveal="up">
           {claim}
         </p>
         {why ? (
@@ -165,9 +186,9 @@ export function Case({ item }: { item: Work }) {
 
       <section className="case-block case-built" data-built={look.built} {...ground(look.pictures)}>
         <Label n={++count}>What I built</Label>
-        {look.roles ? <Roles roles={look.roles} /> : null}
-        <ol className={look.built === 'cells' ? 'case-cells' : 'case-rows'}>
-          {item.contributions.map((entry, i) => (
+        {roles.length ? <Roles roles={roles} /> : null}
+        <ol className={look.built === 'cells' ? 'case-cells' : 'case-rows'} data-cols={look.built === 'cells' ? cols : undefined}>
+          {built.map((entry, i) => (
             <li key={entry.title} data-reveal="up" style={{ '--d': i % 3 } as CSSProperties}>
               <span className="case-n" aria-hidden>
                 {two(i + 1)}

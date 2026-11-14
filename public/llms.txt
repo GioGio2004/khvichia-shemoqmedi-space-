@@ -10,10 +10,10 @@
 
 ## Case studies
 
-- [Shemoqmedi, case study](https://khvichia.shemoqmedi.space/work/shemoqmedi): a platform for Georgia's web designers, developers and digital creators, with a developing awards community. Role: founder, product design, full-stack engineering
-- [Kencho Room, case study](https://khvichia.shemoqmedi.space/work/kencho-room): an interactive room for a custom-furniture brand. Role: creative developer, interactive engineering. Client project, delivered
-- [Kencho Group, case study](https://khvichia.shemoqmedi.space/work/kencho-group): the main website of a custom-furniture business. Role: full-stack and frontend implementation, end-to-end delivery. Client project, delivered
-- [Kalami, case study](https://khvichia.shemoqmedi.space/work/kalami): an educational platform shaped by real classroom needs. Role: creator, full-stack engineer, university lecturer. Active university pilot
+- [Shemoqmedi, case study](https://khvichia.shemoqmedi.space/work/shemoqmedi): Website awards, made in Georgia: a stage for great websites and the people behind them. Recognizing great websites, and giving Georgian web design a stage beside them. Role: Founder, Product design, Full-stack engineering. Stage: Active development & community building.
+- [Kencho Room, case study](https://khvichia.shemoqmedi.space/work/kencho-room): A furniture showroom designed to be explored, not just scrolled. An interactive room for a custom-furniture brand. Role: Creative developer, Interactive engineering. Stage: Client project, Live.
+- [Kencho Group, case study](https://khvichia.shemoqmedi.space/work/kencho-group): A digital home for a custom-furniture studio. Giving a custom-furniture business a distinctive digital presence. Role: Full-stack / frontend implementation, End-to-end delivery. Stage: Client project, Delivered.
+- [Kalami, case study](https://khvichia.shemoqmedi.space/work/kalami): Built in the classroom. Tested by the people learning in it. An educational platform shaped by real classroom needs. Role: Creator, Full-stack engineer, University lecturer. Stage: Active university pilot.
 
 ## Work
 

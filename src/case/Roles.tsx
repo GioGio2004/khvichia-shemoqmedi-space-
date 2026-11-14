@@ -1,27 +1,29 @@
 import type { CSSProperties } from 'react'
+import type { Contribution } from '../content/work'
 import { two } from './fit'
-import type { Role } from './look'
 
 /**
- * A small diagram of who uses a product: one box per role on a shared rail,
- * each with the role's name and what that role can do. It is drawn with
- * plain boxes and lines, not a picture, so it stays sharp and readable at
- * any size. It takes the list of roles from look.ts.
+ * A diagram of who uses a product. The roles hang from one line that runs
+ * down the left side: the first role starts on it, and each next role
+ * branches off it one step further in, with an orange square where it
+ * starts. So the roles read as levels of one system and not as separate
+ * boxes. It is drawn with plain lines, not a picture, so it stays sharp at
+ * any size. The names and the words are the contributions in work.ts that
+ * look.ts names as roles.
  */
-export function Roles({ roles }: { roles: Role[] }) {
+export function Roles({ roles }: { roles: Contribution[] }) {
   return (
-    <ul className="case-roles" aria-label="Roles" style={{ '--n': roles.length } as CSSProperties}>
+    <ol className="case-roles" aria-label="Roles">
       {roles.map((role, i) => (
-        <li key={role.name} data-reveal="up" style={{ '--d': i } as CSSProperties}>
-          <span className="case-role-tag">Role {two(i + 1)}</span>
-          <h3>{role.name}</h3>
-          <ul>
-            {role.can.map((line) => (
-              <li key={line}>{line}</li>
-            ))}
-          </ul>
+        <li key={role.title} data-reveal="up" style={{ '--d': i, '--step': i } as CSSProperties}>
+          {i > 0 ? <i className="case-role-branch" aria-hidden /> : null}
+          <div className="case-role">
+            <span className="case-role-tag">Role {two(i + 1)}</span>
+            <h3>{role.title}</h3>
+            <p>{role.body}</p>
+          </div>
         </li>
       ))}
-    </ul>
+    </ol>
   )
 }

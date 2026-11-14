@@ -13,7 +13,9 @@ export function App() {
 
   return (
     <>
-      <Mark />
+      <nav aria-label="Home">
+        <Mark />
+      </nav>
       <Menu />
       <main>
         <Hero />

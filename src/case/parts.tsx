@@ -39,6 +39,9 @@ export function Title({ text, as: Tag = 'h1', className }: { text: string; as?: 
   )
 }
 
+/** The screens that get the phone picture of a `Shot`. The same width is written in case.css. */
+const NARROW = '(max-width: 760px)'
+
 /**
  * One picture of a project: AVIF first, WebP for browsers without it, in two
  * sharpnesses, with its size written out so the page keeps its place before
@@ -47,10 +50,16 @@ export function Title({ text, as: Tag = 'h1', className }: { text: string; as?: 
  *
  * `sizes` tells the browser how wide the picture is shown, so it can choose
  * the right file.
+ *
+ * `phone` is the same screen taken on a phone. When it is given, narrow
+ * screens are handed that file instead, and the stylesheet shows the top of
+ * it (see "data-phone" in case.css). The words that describe the picture stay
+ * those of the desktop one.
  */
 export function Shot({
   slug,
   picture,
+  phone,
   sizes,
   eager = false,
   reveal = true,
@@ -59,6 +68,7 @@ export function Shot({
 }: {
   slug: string
   picture: Picture
+  phone?: Picture
   sizes: string
   eager?: boolean
   /** False for the picture at the top of a page: it is on screen from the start and moves with the opening instead. */
@@ -68,11 +78,23 @@ export function Shot({
   className?: string
 }) {
   const files = pictureFiles(slug, picture)
+  const narrow = phone ? pictureFiles(slug, phone) : null
   const caption = picture.caption ?? label
   return (
-    <figure className={className ? `case-shot ${className}` : 'case-shot'} data-kind={picture.kind} data-reveal={reveal ? 'shot' : undefined}>
+    <figure
+      className={className ? `case-shot ${className}` : 'case-shot'}
+      data-kind={picture.kind}
+      data-phone={phone ? '' : undefined}
+      data-reveal={reveal ? 'shot' : undefined}
+    >
       <div className="case-shot-frame">
         <picture>
+          {phone && narrow ? (
+            <>
+              <source media={NARROW} type="image/avif" srcSet={narrow.avif} sizes="100vw" width={phone.width} height={phone.height} />
+              <source media={NARROW} type="image/webp" srcSet={narrow.webp} sizes="100vw" width={phone.width} height={phone.height} />
+            </>
+          ) : null}
           <source type="image/avif" srcSet={files.avif} sizes={sizes} />
           <source type="image/webp" srcSet={files.webp} sizes={sizes} />
           <img

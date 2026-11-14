@@ -120,7 +120,7 @@ export function Footer() {
 
         <div className="footer-line" inert={!(ended || plain)}>
           <p>
-            © {year} <span className="footer-name">{hero.name}</span>
+            © <span suppressHydrationWarning>{year}</span> <span className="footer-name">{hero.name}</span>
           </p>
           <p className="footer-links">
             <button type="button" onClick={() => openSheet('contact')}>

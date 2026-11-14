@@ -113,6 +113,21 @@ export function Menu({ home = false }: { home?: boolean }) {
     }
   }, [open, close])
 
+  // With only the bar open (no sheet), moving the focus out of it with Tab folds it away, so it never covers what has the focus.
+  useEffect(() => {
+    const host = root.current
+    if (!open || shown || !host) return
+    const onLeave = (event: FocusEvent) => {
+      const next = event.relatedTarget as Node | null
+      if (next && !host.contains(next)) {
+        setOpen(false)
+        setSheet(null)
+      }
+    }
+    host.addEventListener('focusout', onLeave)
+    return () => host.removeEventListener('focusout', onLeave)
+  }, [open, shown])
+
   // Another part of the page asks for a sheet.
   useEffect(() => {
     const onAsk = (event: Event) => {
@@ -309,7 +324,7 @@ export function Menu({ home = false }: { home?: boolean }) {
                 </svg>
               </span>
             </a>
-            <a className="menu-cv-other" href={cv.other.file} download>
+            <a className="menu-cv-other" href={cv.other.file} download hrefLang="ka" aria-label="Download CV, Georgian version">
               {cv.other.label}
             </a>
           </div>

@@ -49,7 +49,7 @@ export function Ending({ next, total }: { next: Work; total: number }) {
               <Arrow to="down" />
             </a>
             <small>
-              <a href={cv.other.file} download>
+              <a href={cv.other.file} download hrefLang="ka" aria-label={`Download CV, ${cv.other.label}`}>
                 {cv.other.label}
               </a>
             </small>
@@ -63,7 +63,8 @@ export function Ending({ next, total }: { next: Work; total: number }) {
         </ul>
         <p className="case-reach-line">
           <span>
-            © {year} {hero.name}
+            {/* The year is written when the site is built. If the browser's own year is later, the built one stays until the next build. */}
+            © <span suppressHydrationWarning>{year}</span> {hero.name}
           </span>
           <a href="#top">Back to top</a>
         </p>

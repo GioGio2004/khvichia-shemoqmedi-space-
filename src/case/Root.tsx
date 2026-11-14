@@ -19,8 +19,11 @@ export function Root({ path }: { path: string }) {
 
   return (
     <>
-      <Mark home />
-      <Crumb index={page.kind === 'case' ? page.work.index : undefined} total={work.length} />
+      {/* One landmark for the two things in the top left corner. Both are fixed in place, so it takes no room itself. */}
+      <nav aria-label="Where you are">
+        <Mark home />
+        <Crumb index={page.kind === 'case' ? page.work.index : undefined} total={work.length} />
+      </nav>
       <Menu home />
       {page.kind === 'case' ? <Case item={page.work} /> : <NotFound />}
     </>

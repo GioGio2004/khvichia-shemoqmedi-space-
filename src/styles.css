@@ -255,6 +255,12 @@ body {
   transform: scale(1);
 }
 
+/* The orange ring does not stand out enough on the light tab; there it is drawn in charcoal. */
+.menu[data-tone='light']:not([data-sheet]) .menu-toggle:focus-visible,
+.menu[data-tone='light']:not([data-sheet]) .menu-links :focus-visible {
+  outline-color: var(--ink);
+}
+
 /* At the end of the list, set apart and quieter: his CV and his email, one step away on every page. */
 .menu-quick {
   display: flex;
@@ -266,7 +272,12 @@ body {
   text-transform: uppercase;
 }
 .menu-quick a {
-  padding: 14px 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
   opacity: 0.72;
   transition: opacity 0.3s ease;
 }
@@ -647,7 +658,9 @@ body {
 }
 /* The other language, as a quiet line under the button. */
 .menu-cv-other {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   margin-top: 14px;
   font-size: 13px;
   font-weight: 500;
@@ -2201,6 +2214,7 @@ body {
       line-height 0.5s var(--ease);
   }
   .menu[data-sheet] .menu-link {
+    min-height: 44px;
     font-size: 24px;
   }
   .menu-quick {

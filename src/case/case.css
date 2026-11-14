@@ -361,7 +361,8 @@ html[data-page='case'] .mark::after {
   bottom: 0;
   left: 0;
   z-index: 0;
-  height: calc((100vw - 2 * var(--edge)) * var(--ratio) * 0.52 + clamp(40px, 6vw, 96px));
+  /* --ratio is the shape of the picture (its height over its width); --shape replaces it where another picture is shown. */
+  height: calc((100vw - 2 * var(--edge)) * var(--shape, var(--ratio)) * 0.52 + clamp(40px, 6vw, 96px));
   transform-origin: bottom;
   animation: grow 1.2s var(--out) 0.15s both;
 }
@@ -369,9 +370,6 @@ html[data-page='case'] .mark::after {
 /* The caption of that picture stands on the slab, not on the paper, so it is coloured for the slab. */
 .case-hero[data-stage='ink'] .case-hero-shot figcaption {
   color: rgb(255 255 255 / 0.64);
-}
-.case-hero[data-stage='accent'] .case-hero-shot figcaption {
-  color: var(--ink);
 }
 
 /* ---------- Pictures ---------- */
@@ -391,9 +389,9 @@ html[data-page='case'] .mark::after {
 .case-shot figcaption {
   margin-top: 12px;
 }
-/* Edge to edge, a picture needs no frame. */
+/* Edge to edge, a picture needs no frame. Its caption keeps a little ground under it, so it reads as the picture's and not as a heading for what follows. */
 .case[data-bleed] .case-hero {
-  padding-bottom: 0;
+  padding-bottom: clamp(14px, 1.6vw, 24px);
 }
 .case[data-bleed] .case-hero-shot,
 .case[data-bleed] .case-row-shot {
@@ -503,7 +501,8 @@ html[data-page='case'] .mark::after {
   text-wrap: pretty;
 }
 .case-body {
-  max-width: 66ch;
+  /* A ch is the width of a 0, wider than most letters: 52 of them hold about 70 letters, a comfortable line. */
+  max-width: 52ch;
   font-size: clamp(16px, 1.22vw, 18px);
   line-height: 1.62;
   color: var(--text);
@@ -531,6 +530,13 @@ html[data-page='case'] .mark::after {
   line-height: 1.02;
   letter-spacing: -0.05em;
   text-wrap: balance;
+}
+/* A long first sentence is set a size smaller: still a statement, no longer a wall. */
+.case-statement[data-long] {
+  max-width: 23em;
+  font-size: clamp(24px, 3vw, 48px);
+  line-height: 1.08;
+  letter-spacing: -0.042em;
 }
 .case-why {
   max-width: 33em;
@@ -591,81 +597,111 @@ html[data-page='case'] .mark::after {
   margin-top: clamp(56px, 8vw, 120px);
 }
 
-/* The same contributions as a grid of cells; a cell left over at the end of the last line is filled with orange. */
+/*
+ * The same contributions as a grid of cells, two or three across (Case.tsx picks the number that leaves no cell
+ * empty; data-cols). In each cell the number, the name and the line under it start at the same heights, so the names
+ * in a row share one line. If a cell is still left over at the end, it is filled with orange.
+ */
 .case-cells {
+  --cols: 3;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
   border-top: 1px solid var(--ink);
 }
+.case-cells[data-cols='2'] {
+  --cols: 2;
+}
 .case-cells > li {
-  display: flex;
-  flex-direction: column;
   min-height: clamp(190px, 17vw, 270px);
   padding: 18px var(--gutter) clamp(24px, 2.6vw, 40px);
   border-bottom: 1px solid var(--rule);
   border-left: 1px solid var(--rule);
 }
 .case-cells h3 {
-  margin: auto 0 10px;
-  padding-top: 28px;
+  margin: clamp(34px, 4.4vw, 72px) 0 10px;
 }
 .case-cells::after {
   background: var(--grain-dark) var(--accent);
 }
 @media (min-width: 901px) {
-  .case-cells > li:nth-child(3n + 1) {
+  .case-cells[data-cols='3'] > li:nth-child(3n + 1),
+  .case-cells[data-cols='2'] > li:nth-child(odd) {
     padding-left: 0;
     border-left: 0;
   }
-  .case-cells:has(> li:last-child:nth-child(3n + 2))::after {
+  .case-cells[data-cols='3']:has(> li:last-child:nth-child(3n + 2))::after {
     content: '';
   }
-  .case-cells:has(> li:last-child:nth-child(3n + 1))::after {
+  .case-cells[data-cols='3']:has(> li:last-child:nth-child(3n + 1))::after {
     content: '';
     grid-column: span 2;
   }
 }
 
-/* The diagram of roles: one rail, a box hanging from it for each role, an orange node where each one starts. */
+/*
+ * The diagram of roles (Roles.tsx). One line runs down its left side. The first role starts on that line; each next
+ * role branches off it one column further in, and an orange square marks where each one starts. --step is the
+ * number of steps a role stands in from the line, --indent how far that is.
+ */
 .case-roles {
-  display: grid;
-  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
-  margin-bottom: clamp(36px, 5vw, 80px);
-  border-top: 1px solid var(--ink);
+  /* Where the lines run, measured from the top of a role: through the middle of its square. */
+  --node: 8px;
+  margin-bottom: clamp(48px, 6.5vw, 104px);
 }
 .case-roles > li {
+  --indent: calc(var(--step) * (100% + var(--gutter)) / 3);
   position: relative;
-  padding: 24px var(--gutter) 10px;
-  border-right: 1px solid var(--rule);
-  border-bottom: 1px solid var(--rule);
+  display: grid;
+  grid-template-columns: var(--indent) minmax(0, 1fr);
+  align-items: start;
+  padding-bottom: clamp(34px, 4.2vw, 68px);
 }
-.case-roles > li:first-child {
-  border-left: 1px solid var(--rule);
+.case-roles > li:last-child {
+  padding-bottom: 0;
 }
-.case-roles > li::before {
+/* The line down the side, piece by piece: from each role's own height to the next one's. */
+.case-roles > li:not(:last-child)::before {
   content: '';
   position: absolute;
-  top: -5px;
-  left: -1px;
+  top: var(--node);
+  bottom: calc(var(--node) * -1 - 1px);
+  left: 4px;
+  border-left: 1px solid var(--ink);
+}
+/* The branch from that line to the role. */
+.case-role-branch {
+  grid-column: 1;
+  margin: var(--node) 0 0 4px;
+  border-top: 1px solid var(--ink);
+}
+.case-role {
+  position: relative;
+  grid-column: 2;
+  padding-left: 24px;
+}
+.case-role::before {
+  content: '';
+  position: absolute;
+  top: calc(var(--node) - 4px);
+  left: 0;
   width: 9px;
   height: 9px;
   background: var(--accent);
 }
-.case-roles > li:not(:first-child)::before {
-  left: -5px;
+.case-role-tag {
+  display: block;
 }
 .case-roles h3 {
-  margin: 12px 0 clamp(20px, 3vw, 44px);
+  margin: 10px 0 12px;
   font-size: clamp(26px, 3vw, 46px);
   font-weight: 600;
   line-height: 1;
   letter-spacing: -0.045em;
 }
-.case-roles li li {
-  padding: 11px 0 12px;
-  border-top: 1px solid var(--rule);
-  font-size: clamp(14px, 1.1vw, 16px);
-  line-height: 1.4;
+.case-roles p {
+  max-width: 36ch;
+  font-size: clamp(15px, 1.15vw, 17px);
+  line-height: 1.5;
   color: var(--text);
 }
 
@@ -688,24 +724,30 @@ html[data-page='case'] .mark::after {
 .case-seq-row[data-row='pair'] > * {
   grid-column: span 2;
 }
+/* A phone picture is never shown wider than the phone it was taken on. */
+.case-seq-row[data-row='phones'] > * {
+  max-width: 390px;
+}
 /* Up to three phone pictures leave the first column free, so the row hangs like the text above it. */
 .case-seq-row[data-row='phones'] > :first-child:nth-last-child(-n + 3) {
   grid-column-start: 2;
 }
+/* Edge to edge each picture is a plate of its own: its caption close under it, then a wide band of the ground before the next one. */
 .case[data-bleed] .case-sequence {
-  row-gap: var(--gutter);
+  row-gap: clamp(56px, 8vw, 120px);
   padding-right: 0;
   padding-left: 0;
 }
 .case[data-bleed] .case-seq-row:not([data-row='full']) {
-  padding: clamp(24px, 4vw, 64px) var(--edge);
+  padding: 0 var(--edge);
 }
 
 /* ---------- Status: now, next, later ---------- */
 
+/* The stages share the width between them, however many there are (--n). */
 .case-stages {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
   column-gap: var(--gutter);
   row-gap: 36px;
 }
@@ -730,9 +772,9 @@ html[data-page='case'] .mark::after {
   background: var(--accent);
 }
 .case-stages dd {
-  max-width: 36ch;
+  max-width: 40ch;
   margin-top: clamp(16px, 2vw, 28px);
-  font-size: clamp(16px, 1.3vw, 19px);
+  font-size: clamp(16px, 1.15vw, 18px);
   line-height: 1.5;
   color: var(--text);
   text-wrap: pretty;
@@ -979,9 +1021,11 @@ a.case-half .case-half-go {
   width: 0.56em;
   height: 0.56em;
 }
+/* The small line under a link. It is as tall as a finger needs and overlaps nothing, so a link in it can be tapped over its whole height. */
 .case-reach small {
-  display: block;
-  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
   text-transform: none;
   letter-spacing: 0.04em;
   overflow-wrap: anywhere;
@@ -990,7 +1034,6 @@ a.case-half .case-half-go {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  margin: -14px 0;
   text-decoration: underline;
   text-underline-offset: 4px;
   transition: color 0.25s ease;
@@ -1057,9 +1100,10 @@ a.case-half .case-half-go {
   height: 0.56em;
 }
 .case-missing-ways ul {
-  grid-column: 2 / -1;
+  grid-column: 3 / -1;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* Four projects, two by two. */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   column-gap: var(--gutter);
 }
 .case-missing-ways li a {
@@ -1084,6 +1128,47 @@ a.case-half .case-half-go {
 }
 
 /* ---------- Narrower windows ---------- */
+
+@media (max-width: 1100px) {
+  /* Edge to edge the rows go back to the plain three parts: the number needs little room and the line of text a lot. */
+  .case[data-bleed] .case-rows > li {
+    grid-template-columns: 3.4rem minmax(0, 5fr) minmax(0, 4fr);
+  }
+  .case[data-bleed] .case-rows h3 {
+    grid-column: auto;
+  }
+
+  /* The stages stand one under another, each with its name on the left and its text beside it. */
+  .case-stages {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: clamp(24px, 3vw, 36px);
+  }
+  .case-stages > div {
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+    column-gap: var(--gutter);
+    align-items: baseline;
+  }
+  .case-stages dd {
+    max-width: 50ch;
+    margin-top: 0;
+  }
+}
+
+/* Between a phone and a desktop a phone picture takes half the width, so it is shown at about its real size. */
+@media (min-width: 761px) and (max-width: 1100px) {
+  .case-seq-row[data-row='phones'] > *,
+  .case-seq-row[data-row='phones'] > :first-child:nth-last-child(-n + 3) {
+    grid-column: span 2;
+  }
+}
+
+/* A tall window: the words take about half of the first screen, so the picture rises into it. */
+@media (orientation: portrait) {
+  .case-hero-head {
+    min-height: clamp(380px, 52svh, 720px);
+  }
+}
 
 @media (max-width: 900px) {
   /* A section's heading moves above its content, which takes the whole width. */
@@ -1159,7 +1244,25 @@ a.case-half .case-half-go {
   }
 
   .case-hero-head {
-    min-height: clamp(400px, 64svh, 620px);
+    min-height: clamp(380px, 52svh, 620px);
+  }
+  /*
+   * The picture at the top, when the same screen was also taken on a phone: phones are handed that file (parts.tsx)
+   * and show the top of it, four wide and five tall, at close to its real size. The slab behind it follows.
+   */
+  .case-hero-shot[data-phone] .case-shot-frame {
+    position: relative;
+    aspect-ratio: 4 / 5;
+  }
+  .case-hero-shot[data-phone] img {
+    position: absolute;
+    inset: 0;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+  }
+  .case-hero[data-phone] .case-stage {
+    --shape: 1.25;
   }
   .case-next {
     min-height: clamp(340px, 62svh, 560px);
@@ -1192,38 +1295,33 @@ a.case-half .case-half-go {
     grid-column: 2;
   }
 
-  .case-roles {
-    grid-template-columns: minmax(0, 1fr);
-    border-top: 0;
-  }
+  /* The roles step in by a fixed amount, there are no columns to step by. */
   .case-roles > li {
-    border-top: 1px solid var(--ink);
-    border-left: 1px solid var(--rule);
+    --indent: calc(var(--step) * 26px);
   }
-  .case-roles > li:not(:first-child) {
-    margin-top: 20px;
-  }
-  .case-roles > li:not(:first-child)::before {
-    left: -1px;
+  .case-role {
+    padding-left: 20px;
   }
 
-  /* Pictures: desktop ones one under another, phone ones two across. */
-  .case-seq-row[data-row='pair'] > * {
+  /*
+   * Pictures. The phone ones come first and stand one under another at most of the width, so they are close to
+   * their real size and can be read; they lean left and right by turns. The desktop ones follow, one under another.
+   */
+  .case-seq-row[data-row='phones'] {
+    order: -1;
+  }
+  .case-seq-row[data-row='pair'] > *,
+  .case-seq-row[data-row='phones'] > *,
+  .case-seq-row[data-row='phones'] > :first-child:nth-last-child(-n + 3) {
     grid-column: 1 / -1;
   }
   .case-seq-row[data-row='phones'] > * {
-    grid-column: span 2;
+    width: 80%;
   }
-  .case-seq-row[data-row='phones'] > :first-child:nth-last-child(-n + 3) {
-    grid-column: span 2;
-  }
-  .case-seq-row[data-row='phones'] > :only-child {
-    grid-column: 2 / 4;
+  .case-seq-row[data-row='phones'] > :nth-child(even) {
+    justify-self: end;
   }
 
-  .case-stages {
-    grid-template-columns: minmax(0, 1fr);
-  }
   .case-pair-halves {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -1256,9 +1354,36 @@ a.case-half .case-half-go {
     border-left: 0;
   }
   .case-cells h3 {
-    padding-top: 20px;
+    margin-top: 26px;
   }
   .case-cells:has(> li:last-child)::after {
     content: none;
+  }
+
+  .case-stages > div {
+    display: block;
+  }
+  .case-stages dd {
+    margin-top: 14px;
+  }
+}
+
+/* The narrowest phones: the tag keeps only the way back, so it never runs under the menu tab, and the live link is set a little smaller so it stays on one line. */
+@media (max-width: 400px) {
+  .case-visit-line a {
+    font-size: 8.2vw;
+  }
+}
+@media (max-width: 350px) {
+  .case-crumb {
+    padding-left: 0;
+  }
+  .case-crumb-index {
+    display: none;
+  }
+  .case-crumb a,
+  .case-crumb a:first-child {
+    margin-left: 0;
+    border-left: 0;
   }
 }

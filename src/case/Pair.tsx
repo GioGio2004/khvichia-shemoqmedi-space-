@@ -4,15 +4,19 @@ import { Arrow, Shot } from './parts'
 
 const SIZES = '(min-width: 761px) 50vw, 100vw'
 
-/** The picture of one half: the picture at the top of its own page when it has one, otherwise the first screen of the site as the home page's gallery shows it. */
+/**
+ * The picture of one half: the picture at the top of its own page when it has one, otherwise the first screen of the
+ * site as the home page's gallery shows it. Here it is decoration: the words under each half name it, so it carries
+ * no description of its own (a screen reader would otherwise hear the same description twice on one page, and the
+ * link's name would start with it).
+ */
 function Face({ item }: { item: Work }) {
   const hero = item.pictures.find((entry) => entry.name === item.media.hero)
-  // Without its caption: the line under each half already says what it is.
-  if (hero) return <Shot slug={item.slug} picture={{ ...hero, caption: undefined }} sizes={SIZES} reveal={false} />
+  if (hero) return <Shot slug={item.slug} picture={{ ...hero, caption: undefined, alt: '' }} sizes={SIZES} reveal={false} />
   return (
     <figure className="case-shot" data-kind="desktop">
       <div className="case-shot-frame">
-        <img src={item.site.shot} width={1440} height={900} alt={`The first screen of ${item.site.domain}`} loading="lazy" decoding="async" />
+        <img src={item.site.shot} width={1440} height={900} alt="" loading="lazy" decoding="async" />
       </div>
     </figure>
   )

@@ -16,8 +16,17 @@ export type Page = { kind: 'case'; work: Work } | { kind: 'missing' }
 /** The case study at /work/<slug> (with or without a slash at the end), or the "not found" page for anything else. */
 export function pageAt(pathname: string): Page {
   const match = /^\/work\/([^/]+)\/?$/.exec(pathname)
-  const found = match ? workBySlug(decodeURIComponent(match[1])) : undefined
+  const found = match ? workBySlug(decoded(match[1])) : undefined
   return found ? { kind: 'case', work: found } : { kind: 'missing' }
+}
+
+/** A piece of an address as plain text. One that is not written properly (a broken % code) names nothing. */
+function decoded(part: string) {
+  try {
+    return decodeURIComponent(part)
+  } catch {
+    return ''
+  }
 }
 
 /** Every address the site has, for the build: the home page, the four case studies and the "not found" page. */

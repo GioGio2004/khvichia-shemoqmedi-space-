@@ -19,6 +19,9 @@
  *      own title, description, address and share picture; the home page keeps
  *      the head written in index.html and only gains the share picture.
  *
+ * It also writes the "Case studies" part of dist/llms.txt from work.ts (the
+ * rest of that file is public/llms.txt as it stands).
+ *
  * dist/case.html itself is only the mould for those pages and is removed at
  * the end.
  */
@@ -30,7 +33,7 @@ const root = fileURLToPath(new URL('..', import.meta.url))
 const dist = `${root}dist/`
 const server = `${root}dist-ssr/`
 
-const { render, paths } = await import(pathToFileURL(`${server}entry-server.js`).href)
+const { render, paths, caseLines } = await import(pathToFileURL(`${server}entry-server.js`).href)
 
 const EMPTY = '<div id="root"></div>'
 const kB = (text) => `${(text.length / 1024).toFixed(0)} kB`
@@ -108,9 +111,9 @@ for (const path of paths) {
     if (!title.test(html)) throw new Error(`${page.shell} has no <title> to replace.`)
     html = html.replace(title, () => headTags(page.head, page.share).join('\n    '))
   } else {
-    // The home page: its head stays as index.html has it, with the font and the share picture added.
-    html = html.replace('</title>', () => `</title>\n    ${preload}`)
-    html = html.replace('</head>', () => `  ${shareTags(page.share).join('\n    ')}\n  </head>`)
+    // The home page: its head stays as index.html has it, with the font and the share picture added. They go right
+    // under the title, before the stylesheet that is put inside the page: a link preview reads only the start of a page.
+    html = html.replace('</title>', () => `</title>\n    ${[preload, ...shareTags(page.share)].join('\n    ')}`)
   }
 
   const picture = new URL(page.share.image).pathname
@@ -121,6 +124,13 @@ for (const path of paths) {
   writeFileSync(file, html)
   console.log(`prerendered ${path.padEnd(22)} ${page.file.padEnd(32)} page ${kB(page.html)}, styles ${(styles / 1024).toFixed(0)} kB, file ${kB(html)}`)
 }
+
+// llms.txt: the lines under "## Case studies" are replaced by the ones made from work.ts.
+const llms = readFileSync(`${dist}llms.txt`, 'utf8').replace(/\r\n/g, '\n')
+const section = /(## Case studies\n\n)(?:- .*\n)+/
+if (!section.test(llms)) throw new Error('public/llms.txt has no "## Case studies" list to fill.')
+writeFileSync(`${dist}llms.txt`, llms.replace(section, (_all, heading) => `${heading}${caseLines.join('\n')}\n`))
+console.log(`llms.txt               ${caseLines.length} case-study lines written from work.ts`)
 
 rmSync(`${dist}case.html`, { force: true })
 rmSync(server, { recursive: true, force: true })
