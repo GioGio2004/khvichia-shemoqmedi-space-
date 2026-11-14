@@ -258,6 +258,16 @@ body {
   overflow-y: auto;
   overscroll-behavior: contain;
 }
+/*
+ * The sheet can scroll on a screen too small for it, but it never shows a scrollbar: while the bar is still growing
+ * or folding, its content is taller than it for a moment, and a bar would flash at the edge.
+ */
+.menu {
+  scrollbar-width: none;
+}
+.menu::-webkit-scrollbar {
+  display: none;
+}
 /* Like the links, the sheet's content keeps its final place the whole time; the growing bar uncovers it. */
 .menu-contact {
   position: absolute;
