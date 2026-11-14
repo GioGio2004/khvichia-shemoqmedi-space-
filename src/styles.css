@@ -1,0 +1,1885 @@
+@import 'tailwindcss';
+
+:root {
+  /*
+   * The palette, used 60 / 30 / 10:
+   *   paper   the white the opening screen is made of
+   *   ink     charcoal: type, the silhouette, the dark sections
+   *   accent  orange: the block behind the silhouette, the project cards
+   */
+  --paper: #ffffff;
+  --ink: #1c1c1c;
+  --accent: #ff4d00;
+  --tab: #dedede;
+  /* The grid's hairlines. */
+  --hair: rgb(28 28 28 / 0.06);
+  --mono: ui-monospace, 'SF Mono', 'Cascadia Mono', 'Segoe UI Mono', Menlo, Consolas, monospace;
+  /* A fine dark grain, laid over flat colour so it reads as print. */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.3 -0.38'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* The same grain, ready to lay straight onto a surface as a second background: a pale one for charcoal, a dark one for orange. White stays plain. */
+  --grain-pale: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.17 -0.05'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --grain-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.26 -0.076'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --mute: #6f6f6f;
+
+  /* The grid: four columns between two page margins. */
+  --edge: clamp(20px, 3vw, 44px);
+  --gutter: clamp(12px, 1.4vw, 20px);
+
+  /* The menu tab: its height, its width while closed, its width while open. */
+  --menu-h: 72px;
+  --menu-w: 136px;
+  --menu-open: min(68vw, 940px);
+
+  --ease: cubic-bezier(0.76, 0, 0.24, 1);
+  --out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  font-family: 'Inter Variable', Inter, system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+html {
+  scrollbar-width: none;
+}
+html::-webkit-scrollbar {
+  display: none;
+}
+
+body {
+  min-height: 100svh;
+  background: var(--ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* ---------- Monogram, top left ---------- */
+
+.mark {
+  position: fixed;
+  top: calc((var(--menu-h) - 40px) / 2);
+  left: var(--edge);
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  color: var(--paper);
+  background: var(--ink);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  transition:
+    color 0.35s ease,
+    background-color 0.35s ease;
+  animation: pop 0.8s var(--out) 1.1s both;
+}
+/* Over a dark section it turns light, like the menu tab. */
+.mark[data-tone='light'] {
+  color: var(--ink);
+  background: var(--tab);
+}
+
+/* ---------- Menu tab, top right ---------- */
+
+.menu {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 50;
+  width: var(--menu-w);
+  height: var(--menu-h);
+  overflow: hidden;
+  --fg: var(--paper);
+  --bg: var(--ink);
+  color: var(--fg);
+  background: var(--bg);
+  animation: drop 0.9s var(--out) 0.9s both;
+  border-bottom-left-radius: calc(var(--menu-h) / 2);
+  transition:
+    width 0.75s var(--ease),
+    height 0.75s var(--ease),
+    border-radius 0.75s var(--ease),
+    color 0.35s ease,
+    background-color 0.35s ease;
+}
+/* Over a dark section the tab turns light. */
+.menu[data-tone='light'] {
+  --fg: var(--ink);
+  --bg: var(--tab);
+}
+.menu[data-open='true'] {
+  width: var(--menu-open);
+}
+
+.menu-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: var(--menu-w);
+  height: var(--menu-h);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  cursor: pointer;
+}
+.menu-toggle:focus-visible {
+  outline-offset: -8px;
+}
+
+/* "Menu" and "Close" sit one above the other; opening slides the second one into view. */
+.menu-word {
+  display: block;
+  height: 34px;
+  overflow: hidden;
+}
+.menu-word > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  transition: transform 0.6s var(--ease);
+}
+/* "Close" is a small pill with a cross, so it does not read as one more section. */
+.menu-close {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 13px 0 15px;
+  border: 1px solid color-mix(in srgb, var(--fg) 22%, transparent);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition:
+    color 0.25s ease,
+    background-color 0.25s ease,
+    border-color 0.25s ease;
+}
+.menu-close svg {
+  width: 9px;
+  height: 9px;
+}
+.menu-toggle:hover .menu-close,
+.menu-toggle:focus-visible .menu-close {
+  color: var(--bg);
+  background: var(--fg);
+  border-color: var(--fg);
+}
+.menu[data-open='true'] .menu-word > span {
+  transform: translateY(-100%);
+}
+
+/* The links keep their final place the whole time; the growing tab uncovers them. */
+.menu-links {
+  position: absolute;
+  top: 0;
+  right: var(--menu-w);
+  width: calc(var(--menu-open) - var(--menu-w));
+  height: var(--menu-h);
+  padding-left: calc(var(--menu-h) / 2 + 12px);
+  visibility: hidden;
+  transition: visibility 0s 0.75s;
+}
+.menu[data-open='true'] .menu-links {
+  visibility: visible;
+  transition-delay: 0s;
+}
+.menu-links ul {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  padding-right: 20px;
+}
+.menu-links li {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 0.25s ease,
+    transform 0.4s var(--ease);
+}
+.menu[data-open='true'] .menu-links li {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.5s ease calc(0.3s + var(--i) * 0.06s),
+    transform 0.7s var(--out) calc(0.3s + var(--i) * 0.06s);
+}
+.menu-link {
+  position: relative;
+  display: block;
+  padding: 10px 2px;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  cursor: pointer;
+}
+/* A small orange dot appears to the left of the section being pointed at, and stays beside Contact while its panel is open. */
+.menu-link::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -12px;
+  width: 5px;
+  height: 5px;
+  margin-top: -2px;
+  background: var(--accent);
+  border-radius: 50%;
+  transform: scale(0);
+  transition: transform 0.35s var(--out);
+}
+.menu-link:hover::before,
+.menu-link:focus-visible::before,
+.menu-link[data-on='true']::before {
+  transform: scale(1);
+}
+
+/*
+ * Contact: the bar comes all the way down and covers the screen. The sheet
+ * is always charcoal, whatever the bar's colour was, with the same grain as
+ * the page's other black surfaces. White is its main colour; orange is kept
+ * for the name's outline, the icons and the mark on the CV button.
+ */
+.menu[data-contact='true'] {
+  --fg: var(--paper);
+  --bg: var(--ink);
+  width: 100vw;
+  height: 100svh;
+  border-bottom-left-radius: 0;
+  background-image: var(--grain-pale);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+/* Like the links, the sheet's content keeps its final place the whole time; the growing bar uncovers it. */
+.menu-contact {
+  position: absolute;
+  top: var(--menu-h);
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: clamp(28px, 6svh, 64px);
+  width: 100vw;
+  min-height: calc(100svh - var(--menu-h));
+  padding: clamp(8px, 5svh, 56px) var(--edge) clamp(26px, 6.5svh, 64px);
+  visibility: hidden;
+  transition: visibility 0s 0.75s;
+}
+.menu[data-contact='true'] .menu-contact {
+  visibility: visible;
+  transition-delay: 0s;
+}
+/* His name, hollow: only its outline, in orange, as wide as the screen allows. */
+.menu-name {
+  margin-left: -0.04em;
+  font-size: min(14.3vw, 40svh);
+  font-weight: 600;
+  line-height: 0.98;
+  letter-spacing: -0.055em;
+  white-space: nowrap;
+  color: transparent;
+  -webkit-text-stroke: 2px var(--accent);
+}
+/* Under the name: the ways to reach him on the left, the CV button on the right, on one baseline. */
+.menu-reach {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 32px clamp(32px, 6vw, 96px);
+}
+.menu-reach ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, max-content));
+  gap: clamp(16px, 3svh, 26px) clamp(32px, 6vw, 88px);
+}
+/* Everything on the sheet comes up one after another as it opens. */
+.menu-name,
+.menu-reach li,
+.menu-cv {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.25s ease,
+    transform 0.4s var(--ease);
+}
+.menu[data-contact='true'] .menu-name,
+.menu[data-contact='true'] .menu-reach li,
+.menu[data-contact='true'] .menu-cv {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.5s ease calc(0.42s + var(--i, -1) * 0.06s),
+    transform 0.7s var(--out) calc(0.42s + var(--i, -1) * 0.06s);
+}
+/* One way to reach him: an orange icon in a hairline square, a small label, and the address in white. */
+.menu-reach li a {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.menu-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  color: var(--accent);
+  border: 1px solid rgb(255 255 255 / 0.16);
+  transition:
+    border-color 0.3s ease,
+    transform 0.35s var(--out);
+}
+.menu-icon svg {
+  width: 21px;
+  height: 21px;
+}
+/* The crow's shape, filled with the icon's colour. */
+.menu-crow {
+  width: 30px;
+  height: 30px;
+  background: currentColor;
+  mask: center / contain no-repeat;
+  -webkit-mask: center / contain no-repeat;
+}
+.menu-way {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  font-size: clamp(16px, 1.25vw, 21px);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+.menu-way small {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.5);
+}
+.menu-reach li a:hover .menu-icon,
+.menu-reach li a:focus-visible .menu-icon {
+  border-color: var(--accent);
+  transform: translateY(-3px);
+}
+.menu-reach li a:hover .menu-way > span,
+.menu-reach li a:focus-visible .menu-way > span {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+/*
+ * The CV button: a white slab with the words in charcoal and an orange
+ * square that carries the arrow. Pointing at it turns the slab orange and
+ * the square charcoal, and the arrow dips.
+ */
+.menu-cv-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(28px, 4vw, 72px);
+  height: 84px;
+  padding: 0 12px 0 30px;
+  color: var(--ink);
+  background: var(--paper);
+  font-size: clamp(19px, 1.5vw, 25px);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  white-space: nowrap;
+  transition: background-color 0.35s ease;
+}
+.menu-cv-mark {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  color: var(--ink);
+  background: var(--grain-dark) var(--accent);
+  transition:
+    color 0.35s ease,
+    background-color 0.35s ease;
+}
+.menu-cv-mark svg {
+  width: 24px;
+  height: 24px;
+  transition: transform 0.45s var(--out);
+}
+.menu-cv-main:hover,
+.menu-cv-main:focus-visible {
+  background: var(--accent);
+}
+.menu-cv-main:hover .menu-cv-mark,
+.menu-cv-main:focus-visible .menu-cv-mark {
+  color: var(--paper);
+  background: var(--ink);
+}
+.menu-cv-main:hover svg,
+.menu-cv-main:focus-visible svg {
+  transform: translateY(4px);
+}
+/* The other language, as a quiet line under the button. */
+.menu-cv-other {
+  display: inline-block;
+  margin-top: 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgb(255 255 255 / 0.6);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  transition: color 0.3s ease;
+}
+.menu-cv-other:hover,
+.menu-cv-other:focus-visible {
+  color: var(--paper);
+}
+
+/* ---------- Hero ---------- */
+
+.hero {
+  /* The charcoal strip he stands on, and how tall he is. */
+  --band: clamp(84px, 13svh, 124px);
+  --figure-h: min(70svh, 54vw);
+
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: var(--menu-h) minmax(0, 1fr) var(--band);
+  column-gap: var(--gutter);
+  min-height: max(100svh, 600px);
+  padding: 0 var(--edge);
+  overflow: hidden;
+  background: var(--paper);
+}
+
+/* Hairlines down the middle of each gutter, exactly on the strip's dividers. */
+.hero-lines {
+  position: absolute;
+  inset: 0 var(--edge);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: var(--gutter);
+  pointer-events: none;
+}
+.hero-lines i {
+  border-left: 1px solid var(--hair);
+  margin-left: calc(var(--gutter) / -2);
+  transform-origin: top;
+  animation: draw 1.5s var(--out) 0.5s both;
+}
+.hero-lines i:first-child {
+  visibility: hidden;
+}
+
+/*
+ * One hairline across the page at the top edge of the orange block, and
+ * hanging from it the small block of facts: a status line and two lines about
+ * him in the first column, where he is in the third.
+ */
+.hero-rule {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  align-self: end;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: var(--gutter);
+  align-content: start;
+  height: calc(var(--figure-h) * 0.72);
+  margin: 0 calc(var(--edge) * -1);
+  padding: 18px var(--edge) 0;
+  border-top: 1px solid var(--hair);
+  /* As the page scrolls away the facts hurry ahead, the name follows, and the silhouette sinks behind the strip (--lift, 0..1). */
+  translate: 0 calc(var(--lift, 0) * -24svh);
+  animation: settle 1s var(--out) 1.3s both;
+}
+.hero-about {
+  grid-column: 1;
+  max-width: 20rem;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.375;
+  letter-spacing: -0.01em;
+  color: #262626;
+}
+.hero-status,
+.hero-place {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #737373;
+}
+.hero-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+/* The live dot: orange, with a ring that keeps going out from it. */
+.hero-status::before {
+  content: '';
+  flex: none;
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: pulse 2.2s ease-out infinite;
+}
+.hero-place {
+  grid-column: 3;
+  letter-spacing: 0.08em;
+}
+
+/* The name: one line across the first three columns, sitting just above the strip. */
+.hero-title {
+  grid-column: 1 / 4;
+  grid-row: 2;
+  align-self: end;
+  /* Room under the name, so the g's tail sits well clear of the strip. */
+  margin-bottom: calc(clamp(16px, 4svh, 40px) + 22px);
+  /* Pull the first letter's side bearing back, so its stem sits on the page margin. */
+  margin-left: -0.045em;
+  font-size: min(10.2vw, 30svh);
+  font-weight: 600;
+  line-height: 0.96;
+  letter-spacing: -0.06em;
+  white-space: nowrap;
+  translate: 0 calc(var(--lift, 0) * -11svh);
+}
+/* Each word is a window; its letters rise into it one after another. */
+.hero-word {
+  display: inline-block;
+  overflow: hidden;
+  padding: 0 0.07em 0.16em;
+  margin: 0 -0.07em -0.16em;
+  vertical-align: top;
+}
+.hero-word > span,
+.hero-word > b {
+  display: inline-block;
+  animation: rise 1.1s var(--out) calc(0.75s + var(--c) * 0.04s) both;
+}
+/*
+ * The large black type carries the same fine grain as the silhouette: the
+ * letters are filled with their own colour plus the grain. The padding (and
+ * the same margin taken back) keeps tails and tight-set edges inside the fill.
+ */
+.hero-word > span,
+.stack-card:not([data-tone='ink']) .stack-names button > span {
+  padding: 0.12em 0.08em 0.22em;
+  margin: -0.12em -0.08em -0.22em;
+  background: var(--grain-pale) currentColor;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+/* The full stop arrives last and lands with a small bounce. */
+.hero-word > b {
+  font-weight: inherit;
+  color: var(--accent);
+  transform-origin: 50% 80%;
+  animation: dot 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) calc(1.35s + var(--c) * 0.04s) both;
+}
+
+/* Last column: the orange block runs off the page's right edge; he stands in front of it, on the strip. */
+.hero-portrait {
+  position: relative;
+  grid-column: 4;
+  grid-row: 2;
+  align-self: end;
+  height: var(--figure-h);
+  /* Cut off at the strip's top edge only, so the silhouette can rise from behind it. */
+  clip-path: inset(-100vh -100vw 0 -100vw);
+}
+/*
+ * Its left edge is on the last divider of the strip, to the pixel. It reaches
+ * a little past the right edge and under the strip, so leaning away from the
+ * pointer (3px at most) never uncovers a gap.
+ */
+.hero-block {
+  position: absolute;
+  right: calc(var(--edge) * -1 - 4px);
+  bottom: -4px;
+  left: calc(var(--gutter) / -2);
+  height: calc(72% + 4px);
+  background: var(--accent);
+  transform-origin: bottom;
+  translate: calc(var(--mx, 0) * -3px) calc(var(--my, 0) * -3px + var(--lift, 0) * 7svh);
+  animation: grow 1.1s var(--ease) 0.35s both;
+}
+.hero-block::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--grain);
+  opacity: 0.2;
+  mix-blend-mode: multiply;
+}
+/* He leans up to 6px towards the pointer; he stands 8px into the strip so his feet never lift off it. */
+.hero-figure {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  height: 100%;
+  translate: calc(var(--mx, 0) * 6px) calc(var(--my, 0) * 6px + var(--lift, 0) * 17svh);
+  will-change: transform, translate;
+  aspect-ratio: 750 / 1904;
+  margin-left: calc(var(--figure-h) * 750 / 1904 / -2);
+  fill: var(--ink);
+  animation: stand 1.5s var(--out) 0.7s both;
+}
+
+/* The ground: a charcoal strip across the whole page with what he makes, one per column. */
+.hero-band {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: var(--gutter);
+  align-items: stretch;
+  margin: 0 calc(var(--edge) * -1);
+  padding: 0 var(--edge);
+  color: var(--paper);
+  background: var(--grain-pale) var(--ink);
+  font-size: clamp(17px, 1.5vw, 22px);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  animation: lift 1s var(--out) both;
+}
+.hero-band li {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  animation: settle 0.9s var(--out) calc(0.55s + var(--i) * 0.08s) both;
+}
+/* Pointing at a cell draws an orange line along its top, turns its number orange and lifts its name a little. */
+.hero-band li::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: calc(var(--gutter) / -2);
+  left: calc(var(--gutter) / -2);
+  height: 2px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.45s var(--out);
+}
+.hero-band li:first-child::after {
+  left: calc(var(--edge) * -1);
+}
+.hero-band li:last-child::after {
+  right: calc(var(--edge) * -1);
+}
+.hero-band li:hover::after {
+  transform: scaleX(1);
+}
+.hero-band strong {
+  font-weight: inherit;
+  transition: transform 0.3s var(--out);
+}
+.hero-band li:hover strong {
+  transform: translateY(-2px);
+}
+.hero-band li:hover span {
+  color: var(--accent);
+}
+.hero-band li:not(:first-child)::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: calc(var(--gutter) / -2);
+  width: 1px;
+  height: var(--band);
+  background: rgb(255 255 255 / 0.14);
+  transform: translateY(-50%);
+}
+.hero-band span {
+  font-size: 13px;
+  letter-spacing: 0;
+  color: rgb(255 255 255 / 0.5);
+  font-variant-numeric: tabular-nums;
+  transition: color 0.3s ease;
+}
+
+/* ---------- Skills: the first card of the stack, one word and two stepped blocks ---------- */
+
+/* It is a stack card (see below) in the same charcoal as the strip the opening ends on, so the two run into each other. */
+.skills {
+  /* Written by the script: 0..1 as the screen passes (0.5 when it fills the screen). */
+  --run: 0;
+  /* The first column line of the page's four-column grid, measured from the left edge. */
+  --line: calc(var(--edge) + (100vw - 2 * var(--edge) - 3 * var(--gutter)) / 4 + var(--gutter) / 2);
+  --step-h: clamp(84px, 17svh, 168px);
+}
+/* Everything under the card's strip: the word and the blocks sit low on the card. */
+.skills-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 0;
+  padding-bottom: 11svh;
+  overflow: hidden;
+}
+/* The word, set like the name on the opening screen, with the orange full stop. */
+.skills-title {
+  margin: 0 0 clamp(20px, 5svh, 52px) -0.045em;
+  padding: 0 var(--edge);
+  font-size: min(10.2vw, 30svh);
+  font-weight: 600;
+  line-height: 0.96;
+  letter-spacing: -0.06em;
+}
+.skills-title b {
+  font-weight: inherit;
+  color: var(--accent);
+}
+/*
+ * The two blocks: orange from the left edge to the first column line, and
+ * white from that line to the right edge, one block lower. Each draws itself
+ * in from its outer edge as the screen comes up.
+ */
+.skills-steps {
+  color: var(--ink);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+.skills-steps span {
+  display: flex;
+  align-items: center;
+  height: var(--step-h);
+}
+.skills-steps [data-tone='accent'] {
+  width: var(--line);
+  padding-left: var(--edge);
+  background: var(--grain-dark) var(--accent);
+  font-size: clamp(34px, 4.6vw, 80px);
+  clip-path: inset(0 calc((1 - clamp(0, (var(--run) - 0.2) * 5, 1)) * 100%) 0 0);
+}
+.skills-steps [data-tone='paper'] {
+  margin-left: var(--line);
+  padding: 0 var(--edge) 0 clamp(18px, 2.2vw, 40px);
+  background: var(--tab);
+  font-size: clamp(22px, 2.9vw, 50px);
+  clip-path: inset(0 0 0 calc((1 - clamp(0, (var(--run) - 0.27) * 5, 1)) * 100%));
+}
+
+/* ---------- About: the stack, three cards like terraces ---------- */
+
+.stack {
+  /* The strip at the top of each card: the part that stays in view once the next card has come up. */
+  --strip: var(--menu-h);
+
+  position: relative;
+  z-index: 1;
+  background: var(--paper);
+}
+/* Empty room after every card: scrolling through it holds that card in full view before the next one comes up over it. */
+.stack-hold {
+  height: 75svh;
+}
+
+/*
+ * A card fills the screen and sticks one strip lower than the card before
+ * it, so each new card laps over the last and leaves its strip showing.
+ */
+.stack-card {
+  --fg: var(--ink);
+  --bg: var(--accent);
+  /* The colour a pointed-at name turns, and what goes on top of that colour. */
+  --hi: var(--paper);
+  --on-hi: var(--ink);
+  --soft: rgb(28 28 28 / 0.62);
+  /* The grain laid over the card's colour. */
+  --tex: var(--grain-dark);
+
+  position: sticky;
+  top: calc(var(--i) * var(--strip));
+  z-index: calc(var(--i) + 1);
+  display: flex;
+  flex-direction: column;
+  height: calc(100svh - var(--i) * var(--strip));
+  min-height: 420px;
+  color: var(--fg);
+  background: var(--tex) var(--bg);
+}
+.stack-card[data-tone='ink'] {
+  --fg: var(--paper);
+  --bg: var(--ink);
+  --hi: var(--accent);
+  --on-hi: var(--ink);
+  --soft: rgb(255 255 255 / 0.55);
+  --tex: var(--grain-pale);
+}
+.stack-card[data-tone='paper'] {
+  --fg: var(--ink);
+  --bg: var(--paper);
+  --hi: var(--accent);
+  --on-hi: var(--paper);
+  --soft: var(--mute);
+  --tex: none;
+}
+
+.stack-strip {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  height: var(--strip);
+  padding: 0 var(--edge);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+/* The first strip sits under the monogram and the menu tab, so its words start after the one and stop before the other. */
+.stack-card:first-of-type .stack-strip {
+  padding-left: calc(var(--edge) + 60px);
+  padding-right: calc(var(--menu-w) + 20px);
+}
+.stack-strip span {
+  color: var(--soft);
+  font-variant-numeric: tabular-nums;
+}
+.stack-strip h3 {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* The wall of names. */
+.stack-names {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  align-items: baseline;
+  gap: 0.02em 0.34em;
+  min-height: 0;
+  padding: 0 var(--edge);
+  font-size: clamp(34px, min(6.4vw, 12.5svh), 124px);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.055em;
+}
+.stack-names li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.34em;
+  transition: opacity 0.35s ease;
+}
+/* A thin slash between names. */
+.stack-names li:not(:last-child)::after {
+  content: '/';
+  font-weight: 300;
+  color: var(--soft);
+  opacity: 0.5;
+}
+/* While one name is pointed at, the others step back. */
+.stack-names:has(button[data-on='true']) li:not(:has(button[data-on='true'])) {
+  opacity: 0.22;
+}
+.stack-names button {
+  position: relative;
+  padding: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  cursor: default;
+  perspective: 600px;
+}
+.stack-names button > span {
+  position: relative;
+  display: inline-block;
+  transition:
+    color 0.3s ease,
+    transform 0.55s var(--out),
+    letter-spacing 0.55s var(--out),
+    -webkit-text-stroke-color 0.3s ease;
+}
+.stack-names button:focus-visible {
+  outline-color: var(--fg);
+  outline-offset: 0.06em;
+}
+
+/* --- Six ways a name answers the pointer --- */
+
+/* block: a slab of colour wipes in behind the name. */
+.stack-names button[data-fx='block']::before {
+  content: '';
+  position: absolute;
+  inset: 0.06em -0.1em 0.02em;
+  background: var(--hi);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s var(--out);
+}
+.stack-names button[data-fx='block'][data-on='true']::before {
+  transform: scaleX(1);
+}
+.stack-names button[data-fx='block'][data-on='true'] > span {
+  color: var(--on-hi);
+}
+
+/* outline: the name empties out to its outline. */
+.stack-names button[data-fx='outline'] > span {
+  -webkit-text-stroke: 0.018em transparent;
+}
+.stack-names button[data-fx='outline'][data-on='true'] > span {
+  background-image: none;
+  color: transparent;
+  -webkit-text-stroke-color: var(--fg);
+}
+
+/* lean: the name leans forward and takes the highlight colour. */
+.stack-names button[data-fx='lean'][data-on='true'] > span {
+  color: var(--hi);
+  transform: skewX(-14deg) translateX(0.05em);
+}
+
+/* wide: the letters move apart. */
+.stack-names button[data-fx='wide'][data-on='true'] > span {
+  letter-spacing: 0.02em;
+}
+
+/* under: the name lifts and a heavy line draws under it. */
+.stack-names button[data-fx='under']::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0.02em;
+  left: 0;
+  height: 0.07em;
+  background: var(--hi);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.5s var(--out);
+}
+.stack-names button[data-fx='under'][data-on='true']::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+.stack-names button[data-fx='under'][data-on='true'] > span {
+  transform: translateY(-0.07em);
+}
+
+/* flip: the name turns over once. */
+.stack-names button[data-fx='flip'][data-on='true'] > span {
+  color: var(--hi);
+  transform: rotateX(360deg);
+  transition-duration: 0.3s, 0.8s, 0.55s, 0.3s;
+}
+
+/* The foot of the card: one line about the card, or about the name being pointed at. */
+.stack-foot {
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 0 var(--edge) clamp(20px, 5svh, 44px);
+  font-size: clamp(16px, 1.45vw, 22px);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.stack-foot p {
+  animation: settle 0.45s var(--out) both;
+}
+.stack-foot span {
+  flex: none;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  color: var(--soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- The side scroll: a few frames ---------- */
+
+/* Several screens tall (the height is set from the number of photos); the stage stays in view. */
+.frames {
+  position: relative;
+  z-index: 1;
+  color: var(--paper);
+  background: var(--ink);
+}
+.frames-stage {
+  /* The tall frame in the middle, and the small photos of the row. */
+  --frame-w: min(36vw, 76svh * 0.72);
+  --frame-h: calc(var(--frame-w) / 0.72);
+  /* How far down the screen the middle of the frame is. */
+  --frame-y: 50%;
+  --thumb-h: calc(var(--frame-h) * 0.35);
+  --thumb-w: calc(var(--thumb-h) * 0.78);
+  /* The gap between two small photos, and the larger one between the frame and its neighbours. */
+  --gap: clamp(10px, 0.9vw, 18px);
+  --frame-gap: calc(var(--gap) + 12px);
+  --step: calc(var(--thumb-w) + var(--gap));
+  /* How blurred a photo is while it still waits for its turn. */
+  --haze: 9px;
+  /* The room beside the frame, where the comments go. */
+  --side-w: calc(50vw - var(--frame-w) / 2 - var(--frame-gap) - var(--edge));
+  /* Written by the script as the page scrolls. */
+  --arrive: 0;
+  --open: 0;
+  --index: 0;
+  --pos: 0;
+
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+  background: var(--grain-pale);
+}
+
+/* The headline: huge across the screen at first, then small in its corner. */
+.frames-title {
+  position: absolute;
+  top: calc(27% + (1 - var(--open)) * 23%);
+  left: var(--edge);
+  z-index: 3;
+  transform: translateY(-50%);
+  white-space: nowrap;
+}
+.frames-title small {
+  display: block;
+  margin-bottom: 0.5em;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.6);
+  opacity: var(--open);
+}
+.frames-title span {
+  display: block;
+  font-size: calc(clamp(26px, 2.5vw, 44px) + (1 - var(--open)) * 11.2vw);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  opacity: calc(0.25 + var(--arrive) * 0.75);
+}
+
+/* The row of small photos runs through the middle of the screen. */
+.frames-row {
+  position: absolute;
+  top: var(--frame-y);
+  left: 50%;
+  z-index: 1;
+  /* The whole row waits off to the right until the opening. */
+  transform: translate3d(calc((1 - var(--open)) * 50vw), 0, 0);
+}
+.frames-row li {
+  /*
+   * --d is how many places the photo is from the frame: 0 in it, 1 the next
+   * one on the right, -1 the one just left of it. The script writes it on
+   * every frame while the row moves, so there is nothing to snap or restart.
+   * --near is the part of that between the frame and its first neighbour,
+   * which is a longer way than from one small photo to the next.
+   */
+  --d: 1;
+  --near: clamp(-1, var(--d), 1);
+  /* 1 while the photo still waits on the right, 0 once it has been in the frame. */
+  --waiting: clamp(0, var(--d), 1);
+
+  position: absolute;
+  top: calc(var(--thumb-h) / -2);
+  left: calc(var(--thumb-w) / -2);
+  width: var(--thumb-w);
+  height: var(--thumb-h);
+  overflow: hidden;
+  opacity: var(--open);
+  transform: translate3d(
+    calc(var(--near) * (var(--frame-w) / 2 + var(--frame-gap) + var(--thumb-w) / 2) + (var(--d) - var(--near)) * var(--step)),
+    0,
+    0
+  );
+}
+.frames-row img,
+.frames-large img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/*
+ * The small photos sit back a little, so the one in the frame leads. The ones
+ * still to come are out of focus (and a touch larger, so the blur has no
+ * pale edge); they sharpen as they go into the frame.
+ */
+.frames-row img {
+  filter: blur(calc(var(--waiting) * var(--haze))) brightness(0.86);
+  scale: calc(1 + var(--waiting) * 0.14);
+}
+
+/* The frame: a window in which the same photos pass by large. It opens from the bottom. */
+.frames-frame {
+  position: absolute;
+  top: var(--frame-y);
+  left: 50%;
+  z-index: 2;
+  width: var(--frame-w);
+  height: var(--frame-h);
+  margin: calc(var(--frame-h) / -2) 0 0 calc(var(--frame-w) / -2);
+  overflow: hidden;
+  background: var(--ink);
+  clip-path: inset(calc((1 - var(--open)) * 100%) 0 0 0);
+}
+.frames-large {
+  display: flex;
+  width: calc(var(--n) * 100%);
+  height: 100%;
+  transform: translate3d(calc(var(--pos) * var(--frame-w) * -1), 0, 0);
+}
+.frames-large img {
+  flex: none;
+  width: var(--frame-w);
+}
+/* The dashed outline around the frame. */
+.frames-stage::after {
+  content: '';
+  position: absolute;
+  top: var(--frame-y);
+  left: 50%;
+  z-index: 3;
+  width: calc(var(--frame-w) + 20px);
+  height: calc(var(--frame-h) + 20px);
+  margin: calc(var(--frame-h) / -2 - 10px) 0 0 calc(var(--frame-w) / -2 - 10px);
+  border: 1px dashed rgb(255 255 255 / 0.5);
+  opacity: calc(0.3 + var(--arrive) * 0.7);
+  pointer-events: none;
+}
+
+/*
+ * The comments: one per photo, under the row, by turns on the left of the
+ * frame and on the right. A comment's parts come up one after another once
+ * its photo is in the frame (--wait is each part's turn) and all go at once
+ * when it leaves. Scrolling quickly past a photo never shows its comment.
+ */
+.frames-note {
+  position: absolute;
+  top: calc(var(--frame-y) + var(--thumb-h) / 2 + 28px);
+  z-index: 3;
+  width: var(--side-w);
+  container-type: inline-size;
+  pointer-events: none;
+}
+.frames-note[data-side='left'] {
+  left: var(--edge);
+}
+.frames-note[data-side='right'] {
+  left: calc(50% + var(--frame-w) / 2 + var(--frame-gap));
+}
+.frames-note > * {
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+.frames-note[data-on] > * {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.4s ease var(--wait),
+    transform 0.4s var(--out) var(--wait);
+}
+/* The tag: the photo's number, in brackets. */
+.frames-note small {
+  --wait: 0.3s;
+  display: block;
+  margin-bottom: 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.frames-note p {
+  --wait: 0.4s;
+  font-size: clamp(20px, 2vw, 34px);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+/* A comment that is a link: underlined, with a small orange arrow. */
+.frames-note[data-on] a {
+  pointer-events: auto;
+}
+.frames-note a {
+  text-decoration: underline;
+  text-decoration-thickness: 0.06em;
+  text-underline-offset: 0.16em;
+  transition: color 0.3s ease;
+}
+.frames-note a:hover {
+  color: var(--accent);
+}
+.frames-note i {
+  font-style: normal;
+  color: var(--accent);
+}
+
+/* The guest's comment: two small lines, the second a beat after the first, and then the name, as large as the room beside the frame allows. */
+.frames-note .frames-lead,
+.frames-note .frames-bridge {
+  max-width: 24rem;
+  font-size: clamp(14px, 1.1vw, 16px);
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  text-wrap: wrap;
+}
+.frames-note .frames-lead {
+  --wait: 0.45s;
+  font-weight: 400;
+  color: #a3a3a3;
+}
+.frames-note .frames-bridge {
+  --wait: 0.95s;
+  margin-top: 6px;
+  font-weight: 500;
+}
+/* The name: orange, and as large as the room beside the frame allows. It comes up last, in its place. */
+.frames-note strong {
+  --wait: 1.15s;
+  /* 14% of the room's width per em fits the longer line, and it never grows taller than the space under the row. */
+  --name-size: min(14cqw, 10.5svh);
+  display: block;
+  width: max-content;
+  font-size: var(--name-size);
+  font-weight: 600;
+  line-height: 0.92;
+  letter-spacing: -0.055em;
+  white-space: nowrap;
+  color: var(--accent);
+}
+.frames-note .frames-bridge {
+  margin-bottom: 10px;
+}
+.frames-note strong span {
+  display: block;
+}
+.frames-note strong b {
+  font-weight: inherit;
+  color: var(--accent);
+}
+
+.frames-count {
+  position: absolute;
+  bottom: clamp(18px, 4svh, 36px);
+  left: 0;
+  right: 0;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  opacity: var(--open);
+  transition: opacity 0.3s ease;
+}
+
+/*
+ * When the side scroll ends, the footer draws these same photos in the same
+ * places and moves them into its word, so the ones here step aside.
+ */
+:root[data-handoff] .frames-row li,
+:root[data-handoff] .frames-frame {
+  visibility: hidden;
+}
+:root[data-handoff] .frames-note > * {
+  opacity: 0;
+  transition-delay: 0s;
+}
+
+/* ---------- Footer: the photos become the word ---------- */
+
+.footer {
+  position: relative;
+  z-index: 1;
+  background: var(--ink);
+}
+.footer-stage {
+  /* Written by the script: how far the orange has risen, and how far the black has risen into the letters. */
+  --flood: 0;
+  --ink: 0;
+
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+  background: var(--grain-pale);
+}
+/* Orange rises from the bottom of the stage and takes it over. */
+.footer-flood {
+  position: absolute;
+  inset: 0;
+  background: var(--grain-dark) var(--accent);
+  clip-path: inset(calc((1 - var(--flood)) * 100%) 0 0 0);
+}
+/*
+ * The letters are drawn on a layer over the whole screen, not only over the
+ * stage: the photos start moving while the footer is still coming up. It is
+ * only shown while the footer is near.
+ */
+.footer-letters {
+  position: fixed;
+  inset: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.footer-letters[data-live] {
+  visibility: visible;
+}
+/* The last line of the page, once the word is black. */
+.footer-line {
+  position: absolute;
+  right: var(--edge);
+  bottom: clamp(20px, 4.5svh, 40px);
+  left: var(--edge);
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  opacity: clamp(0, calc(var(--ink) * 4 - 3), 1);
+}
+.footer-line a {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+/* Only used when the browser cannot draw the letters. */
+.footer-word {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: var(--accent);
+  font-family: Anton, 'Inter Variable', sans-serif;
+  font-size: min(22vw, 40svh);
+  line-height: 1;
+}
+
+/* ---------- Work ---------- */
+
+/* Taller than the screen: the slider stays in view while the page scrolls through the rest. */
+.work-hold {
+  position: relative;
+  z-index: 1;
+  height: 185svh;
+  background: var(--ink);
+}
+.work {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  min-height: 560px;
+  overflow: hidden;
+  color: var(--paper);
+  background: var(--grain-pale) var(--ink);
+}
+
+/* The whole section is the handle: press anywhere and pull sideways. */
+.work-stage {
+  position: absolute;
+  inset: 0;
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+/* Over the screen of the middle panel, a click opens the site. */
+.work-stage[data-over='screen'] {
+  cursor: zoom-in;
+}
+.work-stage[data-dragging] {
+  cursor: grabbing;
+}
+.work[data-open='true'] .work-stage {
+  cursor: default;
+}
+.work-stage:focus-visible {
+  outline-offset: -6px;
+}
+
+/* The name of the project in the middle, just above the row, and what it is. */
+.work-head {
+  position: absolute;
+  top: clamp(64px, 10.5svh, 120px);
+  right: var(--edge);
+  left: var(--edge);
+  text-align: center;
+  pointer-events: none;
+  opacity: calc(1 - var(--flat, 0) * 2);
+  transform: translateY(calc(var(--flat, 0) * -24px));
+}
+.work-head h3 {
+  overflow: hidden;
+  padding-bottom: 0.12em;
+  margin-bottom: -0.04em;
+  font-size: min(6.4vw, 13svh);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.work-head h3 span {
+  display: block;
+  animation: rise 0.8s var(--out) both;
+}
+.work-head p {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.6);
+  animation: settle 0.8s var(--out) 0.12s both;
+}
+.work-count {
+  position: absolute;
+  right: 0;
+  bottom: clamp(48px, 12svh, 110px);
+  left: 0;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  opacity: calc(1 - var(--flat, 0) * 2);
+}
+
+/*
+ * The opened window. The gallery has flattened the panel onto exactly this
+ * rectangle (minus the bar); the live site appears on it once the panel is
+ * flat, and goes first when it is closed, so the panel is seen bending back.
+ */
+.work-live {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+}
+.work[data-flat='true'] .work-live {
+  pointer-events: auto;
+}
+.work-bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  height: var(--bar);
+  padding: 0 16px;
+  color: var(--ink);
+  background: var(--tab);
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 0.3s ease,
+    transform 0.4s var(--out);
+}
+.work[data-flat='true'] .work-bar {
+  opacity: 1;
+  transform: none;
+}
+.work-bar > span:last-child {
+  display: flex;
+  gap: 22px;
+}
+.work-bar a,
+.work-bar button {
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.work-view {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.work-view iframe,
+.work-still {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--paper);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.work-view iframe {
+  border: 0;
+}
+/* The live site shows once the panel is flat and the page has loaded; the long picture as soon as it is flat. */
+.work[data-flat='true'] .work-view iframe[data-ready='true'],
+.work[data-flat='true'] .work-still {
+  opacity: 1;
+}
+.work-still {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+.work-still img {
+  display: block;
+  width: 100%;
+}
+.work-still p {
+  position: sticky;
+  bottom: 0;
+  padding: 14px 16px;
+  color: var(--paper);
+  background: var(--ink);
+  font-size: 14px;
+  font-weight: 500;
+}
+.work-still a {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* Only used when the browser cannot draw the curved gallery. */
+.work-plain {
+  display: flex;
+  gap: var(--gutter);
+  align-items: center;
+  height: 100%;
+  padding: 0 var(--edge);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.work-plain li {
+  display: flex;
+  flex: none;
+  align-items: flex-end;
+  width: min(74vw, 720px);
+  height: 52%;
+  padding: 28px;
+  color: #111;
+  background: var(--accent);
+  border-radius: 10px;
+  font-size: clamp(32px, 5vw, 76px);
+  font-weight: 600;
+  line-height: 0.98;
+  letter-spacing: -0.05em;
+}
+
+/* ---------- Movements ---------- */
+
+@keyframes rise {
+  from {
+    transform: translateY(110%);
+  }
+}
+/* The silhouette comes up from behind the strip. */
+@keyframes stand {
+  from {
+    transform: translateY(100%);
+  }
+}
+/* The orange block grows out of the strip. */
+@keyframes grow {
+  from {
+    transform: scaleY(0);
+  }
+}
+/* The strip comes up from under the screen. */
+@keyframes lift {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes settle {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+/* The menu tab comes down from above the screen. */
+@keyframes drop {
+  from {
+    transform: translateY(-100%);
+  }
+}
+@keyframes pop {
+  from {
+    transform: scale(0);
+  }
+}
+@keyframes dot {
+  from {
+    transform: scale(0);
+  }
+}
+/* The hairlines draw themselves from the top. */
+@keyframes draw {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes pulse {
+  from {
+    box-shadow: 0 0 0 0 rgb(255 77 0 / 0.55);
+  }
+  to {
+    box-shadow: 0 0 0 9px rgb(255 77 0 / 0);
+  }
+}
+
+/* ---------- Phones and narrow windows: two columns ---------- */
+
+@media (max-width: 760px) {
+  :root {
+    --menu-h: 60px;
+    --menu-w: 108px;
+    --menu-open: 100vw;
+    --menu-row: 58px;
+  }
+
+  .menu[data-open='true'] {
+    height: calc(var(--menu-h) + var(--count) * var(--menu-row) + 28px);
+  }
+  .menu-links {
+    top: var(--menu-h);
+    right: 0;
+    width: 100vw;
+    height: auto;
+    padding: 4px var(--edge) 0;
+  }
+  .menu-links ul {
+    display: block;
+    padding: 0;
+  }
+  .menu-link {
+    padding: 0;
+    font-size: 34px;
+    font-weight: 600;
+    line-height: var(--menu-row);
+    letter-spacing: -0.04em;
+  }
+  .menu-link::before {
+    display: none;
+  }
+  .menu-link[data-on='true'] {
+    color: var(--accent);
+  }
+  .menu[data-contact='true'] {
+    height: 100svh;
+  }
+  .menu-contact {
+    top: calc(var(--menu-h) + var(--count) * var(--menu-row) + 8px);
+    display: block;
+    min-height: 0;
+    padding: 10px var(--edge) 30px;
+  }
+  .menu-name {
+    font-size: 13vw;
+    -webkit-text-stroke-width: 1.4px;
+  }
+  .menu-reach {
+    display: block;
+    margin-top: 22px;
+  }
+  .menu-reach ul {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 13px;
+  }
+  .menu-icon {
+    width: 44px;
+    height: 44px;
+  }
+  .menu-way {
+    font-size: 16px;
+  }
+  .menu-cv {
+    margin-top: 24px;
+  }
+  .menu-cv-main {
+    height: 68px;
+    padding: 0 9px 0 22px;
+    font-size: 19px;
+  }
+  .menu-cv-mark {
+    width: 50px;
+    height: 50px;
+  }
+
+  .hero {
+    --band: auto;
+    --figure-h: min(50svh, 100vw);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: var(--menu-h) auto minmax(var(--figure-h), 1fr) auto;
+    min-height: 100svh;
+  }
+
+  .mark {
+    top: calc((var(--menu-h) - 36px) / 2);
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+
+  .hero-lines {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .hero-lines i:nth-child(n + 3) {
+    display: none;
+  }
+  /* The facts sit to the left of the silhouette, under the line; where he is gives way. */
+  .hero-rule {
+    grid-row: 3;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .hero-about {
+    font-size: 13px;
+  }
+  .hero-status {
+    align-items: flex-start;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+  }
+  .hero-status::before {
+    margin-top: 4px;
+  }
+  .hero-place {
+    display: none;
+  }
+  .hero-band li::after {
+    display: none;
+  }
+
+  /* The name takes two lines here, as large as the screen allows. */
+  .hero-title {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    align-self: start;
+    margin: 8px 0 0 -0.045em;
+    font-size: min(20vw, 96px);
+    line-height: 0.92;
+    white-space: normal;
+  }
+
+  .hero-portrait {
+    grid-column: 2;
+    grid-row: 3;
+  }
+
+  .hero-band {
+    grid-row: 4;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 12px;
+    padding: 18px var(--edge) 20px;
+    font-size: 17px;
+  }
+  .hero-band li {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: flex-start;
+    gap: 10px;
+  }
+  .hero-band li::before {
+    height: 100%;
+  }
+  .hero-band li:nth-child(odd)::before {
+    display: none;
+  }
+
+  .stack-names {
+    align-content: center;
+    font-size: clamp(30px, min(10.4vw, 7.2svh), 60px);
+    line-height: 1.12;
+  }
+  .stack-foot {
+    font-size: 15px;
+  }
+
+  /* Two columns here, so the orange block is half the screen and the white one the other half, a step lower. */
+  .skills {
+    --line: 44vw;
+    --step-h: clamp(72px, 13svh, 110px);
+  }
+  .skills-title {
+    font-size: 22vw;
+  }
+  .skills-steps [data-tone='accent'] {
+    font-size: 11vw;
+  }
+  .skills-steps [data-tone='paper'] {
+    padding-left: 16px;
+    font-size: clamp(17px, 5vw, 24px);
+    line-height: 1.05;
+  }
+
+  /* The frame takes nearly the whole width; room is kept above it for the headline and under it for the comment and the count. */
+  .frames-stage {
+    --frame-w: min(86vw, (100svh - 342px) * 0.72);
+    --frame-y: calc(50svh - 47px);
+    --thumb-h: calc(var(--frame-h) * 0.3);
+    --haze: 6px;
+  }
+  /* The comments go under the frame, by turns set to its left edge and to its right. */
+  .frames-note[data-side] {
+    top: calc(var(--frame-y) + var(--frame-h) / 2 + 22px);
+    left: calc(50% - var(--frame-w) / 2);
+    width: var(--frame-w);
+  }
+  .frames-note[data-side='right']:not([data-big]) {
+    text-align: right;
+  }
+  .frames-note small {
+    margin-bottom: 8px;
+  }
+  .frames-note p {
+    font-size: 22px;
+  }
+  .frames-note strong {
+    --name-size: 14cqw;
+  }
+  .frames-stage[data-cameo] .frames-count {
+    opacity: 0;
+  }
+  .frames-title {
+    top: calc(12% + (1 - var(--open)) * 38%);
+  }
+  .frames-title span {
+    font-size: calc(26px + (1 - var(--open)) * 9vw);
+  }
+
+  .work-head h3 {
+    font-size: min(11vw, 9svh);
+    white-space: normal;
+  }
+  .work-bar a {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The hero leaves in one piece. */
+  .hero {
+    --lift: 0 !important;
+  }
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+  }
+}
