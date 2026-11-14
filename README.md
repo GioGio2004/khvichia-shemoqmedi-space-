@@ -42,3 +42,15 @@ machine, so it runs on Windows without anything extra.
 
 The site is static: `npm run build` writes everything to `dist/`. On Vercel
 the project builds itself on every push to `main`.
+
+## Why it loads fast
+
+- The build writes the finished page into `index.html`, with its styles
+  inside (`scripts/prerender.mjs`, drawing `src/entry-server.tsx`). The first
+  paint needs that one file and no script; the script then takes the page
+  over. Anything `src/main.tsx` draws, `src/entry-server.tsx` must draw too.
+- three.js, the photos it uses and the Anton font are fetched only when the
+  work section or the footer comes near (`near` in `src/work/Work.tsx` and
+  `src/footer/Footer.tsx`).
+- `public/` holds `robots.txt`, `sitemap.xml` and `llms.txt`. There is no
+  catch-all rewrite: an address that does not exist is a real 404.
