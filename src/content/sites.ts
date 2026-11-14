@@ -22,12 +22,15 @@ import shemoqmedi from '../assets/sites/shemoqmedi.webp'
  *           shemoqmedi.space allows it only from this site's real addresses
  *           (see FRAME_ANCESTORS in its next.config.ts), so it is live once
  *           the site is deployed and a picture while working on it locally.
- *           kalami.space still sends a header that forbids it
- *           (Content-Security-Policy: frame-ancestors 'self'); once its
- *           server allows this site's address, set `live: true`.
+ *           kalami.space allows it only from khvichia.shemoqmedi.space, so
+ *           it is live there and a picture anywhere else (the Vercel
+ *           address, or while working on the site locally).
  *
  * The pictures were taken with a headless browser at 1440 x 900.
  */
+/** True when this page is open at its real address, the only one kalami.space lets itself be framed by. */
+const atHome = typeof window !== 'undefined' && window.location.hostname === 'khvichia.shemoqmedi.space'
+
 export type Site = { slug: string; name: string; domain: string; url: string; kind: string; shot: string; long: string; live: boolean }
 
 export const sites: Site[] = [
@@ -69,6 +72,6 @@ export const sites: Site[] = [
     kind: 'Learning platform',
     shot: kalami,
     long: kalamiLong,
-    live: false,
+    live: atHome,
   },
 ]
