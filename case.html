@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en" data-page="case">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      The shell of every page that is not the home page: the four case studies (/work/<slug>) and the "not found"
+      page. While building, scripts/prerender.mjs makes one finished HTML file per page from it and writes that
+      page's own title and description in place of the title below. While developing, src/case/main.tsx sets the title.
+    -->
+    <title>Giorgi Khvichia</title>
+    <meta name="theme-color" content="#ffffff" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/case/main.tsx"></script>
+  </body>
+</html>

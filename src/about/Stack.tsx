@@ -1,8 +1,16 @@
 import { Fragment, useState, type CSSProperties } from 'react'
-import { stack, type Group } from '../content/stack'
+import { stack, type Group, type Tool } from '../content/stack'
+import { work } from '../content/work'
 import { SkillsCard } from './Skills'
 
 const two = (n: number) => String(n).padStart(2, '0')
+
+/** What the foot of a card says about a tool: the projects that use it, or its own note if none of the four do. */
+function evidence(tool: Tool) {
+  if (!tool.usedIn.length) return tool.note
+  const names = tool.usedIn.length === work.length ? 'all four projects' : tool.usedIn.map((slug) => work.find((item) => item.slug === slug)?.title ?? slug).join(', ')
+  return `${tool.name} · ${names}`
+}
 
 /** The ways a name answers the pointer. Each name gets the next one in turn, so neighbours never behave alike. */
 const EFFECTS = ['block', 'outline', 'lean', 'wide', 'under', 'flip'] as const
@@ -45,7 +53,7 @@ function Card({ group, index }: { group: Group; index: number }) {
 
       <footer className="stack-foot">
         <p id={`stack-note-${index}`} key={pointed ?? 'blurb'} aria-live="polite">
-          {pointed === null ? group.blurb : group.tools[pointed].note}
+          {pointed === null ? group.blurb : evidence(group.tools[pointed])}
         </p>
         <span>{two(group.tools.length)} tools</span>
       </footer>
@@ -61,12 +69,12 @@ function Card({ group, index }: { group: Group; index: number }) {
  * of names in the site's three colours (orange, charcoal, white).
  *
  * A card is a wall of names in very large type. Pointing at a name (or
- * tabbing to it) makes it react, each in its own way, dims the others, and
- * puts a line about how he used it at the foot of the card.
+ * tabbing to it) makes it react, each in its own way, lets the others step
+ * back, and names the projects that use it at the foot of the card.
  */
 export function Stack() {
   return (
-    <section id="about" className="stack">
+    <section id="skills" className="stack">
       <h2 className="sr-only">Skills, stack and experience</h2>
       <SkillsCard count={`00 / ${two(stack.length)}`} />
       <div className="stack-hold" aria-hidden />

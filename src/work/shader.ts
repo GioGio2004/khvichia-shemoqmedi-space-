@@ -92,7 +92,10 @@ export const fragmentShader = /* glsl */ `
     // Behind: the same picture, larger, out of focus, nearly colourless and dim. It slides against the panel as the row moves.
     vec2 behind = fit((vUv - 0.5) * 0.7 + 0.5 + vec2(vSide * 0.035, 0.0), uShape.x / uShape.y);
     vec3 back = blurred(behind);
-    vec3 color = mix(vec3(dot(back, vec3(0.299, 0.587, 0.114))), back, 0.2) * 0.5;
+    // A bright picture is dimmed more than a dark one, so a cream page and a black page both end up as a dark panel
+    // (a flat half would leave the bright ones as a grey slab with the screen's shadow showing on it).
+    float light = dot(back, vec3(0.299, 0.587, 0.114));
+    vec3 color = mix(vec3(light), back, 0.2) * mix(0.5, 0.14, smoothstep(0.25, 0.9, light));
 
     // The screen in the middle, sharp, with a soft shadow around it.
     vec2 p = vUv - 0.5;

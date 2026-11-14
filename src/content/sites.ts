@@ -2,14 +2,16 @@ import kalamiLong from '../assets/sites/kalami-long.webp'
 import kalami from '../assets/sites/kalami.webp'
 import kenchoLong from '../assets/sites/kencho-long.webp'
 import kenchoRoomLong from '../assets/sites/kencho-room-long.webp'
-import kenchoRoom from '../assets/sites/kencho-room.webp'
+// The room itself, not the START screen in front of it (taken by scripts/work-shots/kencho-room.mjs).
+import kenchoRoom from '../assets/work/kencho-room/room-1440.webp'
 import kencho from '../assets/sites/kencho.webp'
 import shemoqmediLong from '../assets/sites/shemoqmedi-long.webp'
 import shemoqmedi from '../assets/sites/shemoqmedi.webp'
 
 /**
- * The websites he has built, in order. Two parts of the page show them: the
- * list in "The road so far" and the curved slider in the work section.
+ * The websites he has built, in order: their addresses and the pictures the
+ * curved slider in the work section shows. Their story (what each one is, his
+ * role, the case study) is in work.ts, which uses these by slug.
  *
  *   name    the large title above the slider
  *   domain  what the list shows
@@ -55,8 +57,8 @@ export const sites: Site[] = [
     live: true,
   },
   {
-    slug: 'kencho',
-    name: 'Kencho',
+    slug: 'kencho-group',
+    name: 'Kencho Group',
     domain: 'kenchogroup.ge',
     url: 'https://www.kenchogroup.ge/',
     kind: 'Custom furniture studio',

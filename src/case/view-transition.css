@@ -1,0 +1,42 @@
+/*
+ * Going from one page of the site to another (the home page to a case study,
+ * one case study to the next). Each is a real page load, but in browsers
+ * that can do it the new page comes up over the old one from the bottom, the
+ * way the stacked skill cards do on the home page, so it feels like one site.
+ * The old page drifts up a little as it is covered.
+ *
+ * Both entries import this file (src/main.tsx and src/case/main.tsx): a
+ * transition only happens when the page being left and the page being opened
+ * both ask for it. Browsers that cannot do it simply open the page. People
+ * who ask for less motion get no movement at all.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
+
+  ::view-transition-image-pair(root) {
+    isolation: auto;
+  }
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    mix-blend-mode: normal;
+  }
+  ::view-transition-old(root) {
+    animation: gk-page-away 0.9s cubic-bezier(0.76, 0, 0.24, 1) both;
+  }
+  ::view-transition-new(root) {
+    animation: gk-page-up 0.9s cubic-bezier(0.76, 0, 0.24, 1) both;
+  }
+}
+
+@keyframes gk-page-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes gk-page-away {
+  to {
+    transform: translateY(-7%);
+  }
+}

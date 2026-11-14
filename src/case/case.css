@@ -1,0 +1,1264 @@
+/*
+ * The case-study pages (/work/<slug>) and the "not found" page. The tokens,
+ * the monogram, the menu tab and the contact sheet come from styles.css,
+ * which this page loads as well; everything here is new and starts with
+ * "case-", so it cannot disturb the home page.
+ *
+ * One set of parts for all four projects. A section stands on one of three
+ * grounds, set with data-ground: paper (white), ink (charcoal with grain) or
+ * accent (orange with grain). Which project gets which variant is decided in
+ * look.ts.
+ */
+
+/* ---------- Shared with the home page: the monogram and the menu tab ---------- */
+
+/* Their entrance belongs to the home page's opening. Here they are simply in place, and they stay put while one case study replaces another. */
+html[data-page='case'] .mark,
+html[data-page='case'] .menu {
+  animation: none;
+}
+html[data-page='case'] .mark {
+  view-transition-name: gk-mark;
+}
+html[data-page='case'] .menu {
+  view-transition-name: gk-menu;
+}
+/* The monogram is 40 pixels square (36 on phones); this makes it 44 for a finger without changing how it looks. */
+html[data-page='case'] .mark::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+}
+
+/* ---------- The tag beside the monogram ---------- */
+
+.case-crumb {
+  position: fixed;
+  top: calc((var(--menu-h) - 40px) / 2);
+  left: calc(var(--edge) + 44px);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  height: 40px;
+  padding-left: 14px;
+  color: var(--paper);
+  background: var(--ink);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  view-transition-name: gk-crumb;
+  transition:
+    color 0.35s ease,
+    background-color 0.35s ease;
+}
+.case-crumb[data-tone='light'] {
+  color: var(--ink);
+  background: var(--tab);
+}
+.case-crumb-index {
+  padding-right: 14px;
+  opacity: 0.72;
+}
+.case-crumb a {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 14px;
+  border-left: 1px solid color-mix(in srgb, currentColor 24%, transparent);
+  transition: color 0.25s ease;
+}
+/* The link is 40 pixels tall like the tag; this makes it 44 for a finger. */
+.case-crumb a::after {
+  content: '';
+  position: absolute;
+  inset: -2px 0;
+}
+.case-crumb a:hover {
+  color: var(--accent);
+}
+.case-crumb a:first-child {
+  margin-left: -14px;
+  border-left: 0;
+}
+
+/* ---------- The page and its grounds ---------- */
+
+.case {
+  /* Lines between things, quiet text, running text, and the slab a link wipes in with what goes on top of it. */
+  --rule: rgb(28 28 28 / 0.14);
+  --line: rgb(28 28 28 / 0.06);
+  --soft: #696969;
+  --text: #2a2a2a;
+  --hi: var(--accent);
+  --on-hi: var(--paper);
+
+  position: relative;
+  color: var(--ink);
+  background: var(--paper);
+  overflow-x: clip;
+}
+.case[data-ground='ink'],
+.case [data-ground='ink'],
+.case-ending {
+  --rule: rgb(255 255 255 / 0.17);
+  --line: rgb(255 255 255 / 0.07);
+  --soft: rgb(255 255 255 / 0.64);
+  --text: rgb(255 255 255 / 0.88);
+  --hi: var(--accent);
+  --on-hi: var(--ink);
+  color: var(--paper);
+  background: var(--grain-pale) var(--ink);
+}
+.case [data-ground='accent'] {
+  --rule: rgb(28 28 28 / 0.3);
+  --line: rgb(28 28 28 / 0.1);
+  --soft: var(--ink);
+  --text: var(--ink);
+  --hi: var(--ink);
+  --on-hi: var(--paper);
+  color: var(--ink);
+  background: var(--grain-dark) var(--accent);
+}
+/* On orange the orange ring would vanish, so it is charcoal there. */
+.case [data-ground='accent'] :focus-visible {
+  outline-color: var(--ink);
+}
+
+/* For screen readers only. */
+.case-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The small capitals used for every label on the page. */
+.case-eyebrow,
+.case-domain,
+.case-label,
+.case-n,
+.case-glance dt,
+.case-stages dt,
+.case-role-tag,
+.case-shot figcaption,
+.case-visit-where,
+.case-half-kind,
+.case-next-top,
+.case-reach-label,
+.case-reach small {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--soft);
+}
+
+.case-arrow {
+  display: inline-block;
+  flex: none;
+  width: 0.72em;
+  height: 0.72em;
+  overflow: visible;
+  transition: transform 0.45s var(--out);
+}
+
+/* A link that answers the pointer the way the skill names do: a slab of colour wipes in behind it from the left. */
+.case-wipe {
+  position: relative;
+  isolation: isolate;
+  transition: color 0.3s ease;
+}
+.case-wipe::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--hi);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s var(--out);
+}
+.case-wipe:focus-visible {
+  color: var(--on-hi);
+}
+.case-wipe:focus-visible::before {
+  transform: scaleX(1);
+}
+@media (hover: hover) {
+  .case-wipe:hover {
+    color: var(--on-hi);
+  }
+  .case-wipe:hover::before {
+    transform: scaleX(1);
+  }
+  .case-wipe:hover .case-arrow {
+    transform: translate(0.12em, 0);
+  }
+}
+
+/* ---------- The top: name, one line, picture ---------- */
+
+.case-hero {
+  position: relative;
+  isolation: isolate;
+  padding: 0 var(--edge) clamp(40px, 6vw, 96px);
+}
+/* The words fill most of the first screen and leave the top of the picture showing under them. */
+.case-hero-head {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: clamp(440px, 72svh, 840px);
+  padding-top: var(--menu-h);
+}
+/* Hairlines down the page on the four-column grid, as on the home page. */
+.case-lines {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: var(--gutter);
+  pointer-events: none;
+}
+.case-lines i {
+  border-left: 1px solid var(--line);
+  margin-left: calc(var(--gutter) / -2);
+  transform-origin: top;
+  animation: draw 1.4s var(--out) 0.15s both;
+}
+.case-lines i:first-child {
+  visibility: hidden;
+}
+/* One hairline across, and hanging from it what kind of work this is and where it lives. */
+.case-hero-rule {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: var(--gutter);
+  align-items: start;
+  margin: clamp(18px, 5svh, 56px) calc(var(--edge) * -1) 0;
+  padding: 18px var(--edge) 0;
+  border-top: 1px solid var(--line);
+  animation: settle 1s var(--out) 0.1s both;
+}
+.case-eyebrow {
+  grid-column: 1 / 3;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.case-eyebrow::before {
+  content: '';
+  flex: none;
+  width: 6px;
+  height: 6px;
+  margin-top: 5px;
+  background: var(--accent);
+}
+.case [data-ground='accent'] .case-eyebrow::before {
+  background: var(--ink);
+}
+.case-domain {
+  grid-column: 3 / -1;
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  /* Tall enough for a finger without moving the text off the eyebrow's line. */
+  min-height: 44px;
+  margin: -14px 0;
+  transition: color 0.25s ease;
+}
+.case-domain:hover {
+  color: var(--accent);
+}
+.case-domain:hover .case-arrow {
+  transform: translate(2px, -2px);
+}
+
+/*
+ * The name. As large as the page allows on one line (--fit is its width in
+ * ems, see fit.ts), set like the name on the home page.
+ */
+.case-title,
+.case-next-title {
+  margin-left: -0.045em;
+  font-size: min(calc((100vw - 2 * var(--edge)) / var(--fit)), 31svh, 21vw);
+  font-weight: 600;
+  line-height: 0.96;
+  letter-spacing: -0.055em;
+  white-space: nowrap;
+}
+.case-title {
+  margin-top: auto;
+  padding-top: 32px;
+}
+/* Each word is a window; its letters rise into it one after another. */
+.case-word {
+  display: inline-block;
+  overflow: hidden;
+  padding: 0 0.07em 0.16em;
+  margin: 0 -0.07em -0.16em;
+  vertical-align: top;
+}
+.case-word > span,
+.case-word > b {
+  display: inline-block;
+}
+.case-word > b {
+  font-weight: inherit;
+  color: var(--accent);
+  transform-origin: 50% 80%;
+}
+.case-title .case-word > span {
+  animation: rise 1.1s var(--out) calc(0.15s + var(--c) * 0.04s) both;
+}
+.case-title .case-word > b {
+  animation: dot 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) calc(0.7s + var(--c) * 0.04s) both;
+}
+/* On paper the large black letters carry the same fine grain as on the home page. */
+.case-hero[data-ground='paper'] .case-word > span {
+  padding: 0.12em 0.08em 0.22em;
+  margin: -0.12em -0.08em -0.22em;
+  background: var(--grain-pale) currentColor;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.case-subtitle {
+  max-width: 32em;
+  margin: clamp(10px, 2svh, 22px) 0 clamp(26px, 4.5svh, 52px);
+  font-size: clamp(18px, 1.75vw, 28px);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  animation: settle 1s var(--out) 0.6s both;
+}
+
+/* The picture at the top comes up into place with the opening. It only moves: it is visible from the first frame. */
+.case-hero-shot {
+  position: relative;
+  z-index: 1;
+  animation: case-lift 1.3s var(--out) both;
+}
+@keyframes case-lift {
+  from {
+    transform: translateY(56px);
+  }
+}
+/* A slab of colour behind the lower half of that picture, from edge to edge: the picture stands in front of it. */
+.case-stage {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 0;
+  height: calc((100vw - 2 * var(--edge)) * var(--ratio) * 0.52 + clamp(40px, 6vw, 96px));
+  transform-origin: bottom;
+  animation: grow 1.2s var(--out) 0.15s both;
+}
+
+/* The caption of that picture stands on the slab, not on the paper, so it is coloured for the slab. */
+.case-hero[data-stage='ink'] .case-hero-shot figcaption {
+  color: rgb(255 255 255 / 0.64);
+}
+.case-hero[data-stage='accent'] .case-hero-shot figcaption {
+  color: var(--ink);
+}
+
+/* ---------- Pictures ---------- */
+
+.case-shot {
+  min-width: 0;
+}
+.case-shot-frame {
+  overflow: hidden;
+  border: 1px solid var(--rule);
+}
+.case-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.case-shot figcaption {
+  margin-top: 12px;
+}
+/* Edge to edge, a picture needs no frame. */
+.case[data-bleed] .case-hero {
+  padding-bottom: 0;
+}
+.case[data-bleed] .case-hero-shot,
+.case[data-bleed] .case-row-shot {
+  margin-right: calc(var(--edge) * -1);
+  margin-left: calc(var(--edge) * -1);
+}
+.case[data-bleed] .case-hero-shot .case-shot-frame,
+.case[data-bleed] .case-row-shot .case-shot-frame,
+.case[data-bleed] [data-row='full'] .case-shot-frame {
+  border: 0;
+}
+.case[data-bleed] .case-shot figcaption {
+  padding: 0 var(--edge);
+}
+
+/* ---------- Coming into view (see useReveal.ts) ---------- */
+
+[data-reveal='up'] {
+  transition:
+    opacity 0.9s ease calc(var(--d, 0) * 0.09s),
+    transform 1.1s var(--out) calc(var(--d, 0) * 0.09s);
+}
+[data-reveal='up'][data-seen='false'] {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: none;
+}
+/* A picture unrolls downwards from its top edge and eases back to its size. */
+[data-reveal='shot'] .case-shot-frame {
+  clip-path: inset(0);
+  transition: clip-path 1.2s var(--out);
+}
+[data-reveal='shot'] img {
+  transition: transform 1.6s var(--out);
+}
+[data-reveal='shot'][data-seen='false'] .case-shot-frame {
+  clip-path: inset(0 0 100% 0);
+  transition: none;
+}
+[data-reveal='shot'][data-seen='false'] img {
+  transform: scale(1.07);
+  transition: none;
+}
+
+/* ---------- At a glance ---------- */
+
+.case-glance {
+  padding: 0 var(--edge);
+}
+.case-glance dl {
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+.case-glance dl > div {
+  padding: 20px var(--gutter) 30px;
+  border-left: 1px solid var(--rule);
+}
+.case-glance dl > div:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+.case-glance dt {
+  margin-bottom: 14px;
+}
+.case-glance dd {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+}
+.case-glance dd span {
+  display: block;
+}
+
+/* ---------- A section: its small heading in the first column, its content in the other three ---------- */
+
+.case-block {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: var(--gutter);
+  row-gap: clamp(20px, 2.4vw, 36px);
+  align-items: start;
+  padding: clamp(72px, 10.5vw, 160px) var(--edge);
+}
+.case-block > * {
+  grid-column: 2 / -1;
+}
+.case-block > .case-label {
+  grid-column: 1;
+}
+.case-label {
+  display: flex;
+  gap: 14px;
+  padding-top: 0.65em;
+}
+
+/* The opening sentence of a paragraph, set large; the rest follows at reading size. */
+.case-lead {
+  max-width: 29em;
+  font-size: clamp(22px, 2.4vw, 37px);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.032em;
+  text-wrap: pretty;
+}
+.case-body {
+  max-width: 66ch;
+  font-size: clamp(16px, 1.22vw, 18px);
+  line-height: 1.62;
+  color: var(--text);
+  text-wrap: pretty;
+}
+/* Editorial: the heading above, the opening sentence on the left half and the rest on the right half. */
+.case-overview[data-reading='split'] > .case-label,
+.case-overview[data-reading='split'] > .case-lead {
+  grid-column: 1 / 3;
+}
+.case-overview[data-reading='split'] > .case-lead {
+  padding-right: 1em;
+}
+.case-overview[data-reading='split'] > .case-body {
+  grid-column: 3 / -1;
+  padding-top: 0.5em;
+}
+
+/* The challenge: its first sentence as a statement, the reason under it. */
+.case-statement,
+.case-pair-title {
+  max-width: 17em;
+  font-size: clamp(30px, 4.7vw, 78px);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.05em;
+  text-wrap: balance;
+}
+.case-why {
+  max-width: 33em;
+  font-size: clamp(18px, 1.7vw, 26px);
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: -0.022em;
+  color: var(--soft);
+  text-wrap: pretty;
+}
+
+/* ---------- What I built ---------- */
+
+.case-rows > li {
+  display: grid;
+  grid-template-columns: 3.4rem minmax(0, 5fr) minmax(0, 4fr);
+  column-gap: var(--gutter);
+  align-items: baseline;
+  padding: clamp(20px, 2.3vw, 34px) 0;
+  border-top: 1px solid var(--rule);
+}
+.case-rows > li:last-child {
+  border-bottom: 1px solid var(--rule);
+}
+.case-rows h3,
+.case-cells h3 {
+  font-size: clamp(22px, 2.5vw, 38px);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+}
+.case-rows p,
+.case-cells p {
+  max-width: 38ch;
+  font-size: clamp(15px, 1.15vw, 17px);
+  line-height: 1.5;
+  color: var(--text);
+}
+.case-row-shot {
+  grid-column: 1 / -1;
+  margin-top: clamp(20px, 2.3vw, 34px);
+}
+/* Edge to edge the rows take the whole width, so their pictures can too. */
+.case[data-bleed] .case-built > * {
+  grid-column: 1 / -1;
+}
+.case[data-bleed] .case-rows > li {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.case[data-bleed] .case-rows h3 {
+  grid-column: 2 / 4;
+}
+.case[data-bleed] .case-rows > li:has(.case-row-shot) {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+.case[data-bleed] .case-rows > li:has(.case-row-shot) + li {
+  margin-top: clamp(56px, 8vw, 120px);
+}
+
+/* The same contributions as a grid of cells; a cell left over at the end of the last line is filled with orange. */
+.case-cells {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid var(--ink);
+}
+.case-cells > li {
+  display: flex;
+  flex-direction: column;
+  min-height: clamp(190px, 17vw, 270px);
+  padding: 18px var(--gutter) clamp(24px, 2.6vw, 40px);
+  border-bottom: 1px solid var(--rule);
+  border-left: 1px solid var(--rule);
+}
+.case-cells h3 {
+  margin: auto 0 10px;
+  padding-top: 28px;
+}
+.case-cells::after {
+  background: var(--grain-dark) var(--accent);
+}
+@media (min-width: 901px) {
+  .case-cells > li:nth-child(3n + 1) {
+    padding-left: 0;
+    border-left: 0;
+  }
+  .case-cells:has(> li:last-child:nth-child(3n + 2))::after {
+    content: '';
+  }
+  .case-cells:has(> li:last-child:nth-child(3n + 1))::after {
+    content: '';
+    grid-column: span 2;
+  }
+}
+
+/* The diagram of roles: one rail, a box hanging from it for each role, an orange node where each one starts. */
+.case-roles {
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+  margin-bottom: clamp(36px, 5vw, 80px);
+  border-top: 1px solid var(--ink);
+}
+.case-roles > li {
+  position: relative;
+  padding: 24px var(--gutter) 10px;
+  border-right: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+.case-roles > li:first-child {
+  border-left: 1px solid var(--rule);
+}
+.case-roles > li::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: -1px;
+  width: 9px;
+  height: 9px;
+  background: var(--accent);
+}
+.case-roles > li:not(:first-child)::before {
+  left: -5px;
+}
+.case-roles h3 {
+  margin: 12px 0 clamp(20px, 3vw, 44px);
+  font-size: clamp(26px, 3vw, 46px);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.045em;
+}
+.case-roles li li {
+  padding: 11px 0 12px;
+  border-top: 1px solid var(--rule);
+  font-size: clamp(14px, 1.1vw, 16px);
+  line-height: 1.4;
+  color: var(--text);
+}
+
+/* ---------- The remaining pictures, as a sequence of rows ---------- */
+
+.case-sequence {
+  display: grid;
+  row-gap: clamp(16px, 3.2vw, 48px);
+  padding: 0 var(--edge) clamp(72px, 10.5vw, 160px);
+}
+.case-seq-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(16px, 3.2vw, 48px) var(--gutter);
+  align-items: start;
+}
+.case-seq-row[data-row='full'] > * {
+  grid-column: 1 / -1;
+}
+.case-seq-row[data-row='pair'] > * {
+  grid-column: span 2;
+}
+/* Up to three phone pictures leave the first column free, so the row hangs like the text above it. */
+.case-seq-row[data-row='phones'] > :first-child:nth-last-child(-n + 3) {
+  grid-column-start: 2;
+}
+.case[data-bleed] .case-sequence {
+  row-gap: var(--gutter);
+  padding-right: 0;
+  padding-left: 0;
+}
+.case[data-bleed] .case-seq-row:not([data-row='full']) {
+  padding: clamp(24px, 4vw, 64px) var(--edge);
+}
+
+/* ---------- Status: now, next, later ---------- */
+
+.case-stages {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: var(--gutter);
+  row-gap: 36px;
+}
+.case-stages > div {
+  padding-top: 16px;
+  border-top: 1px solid var(--ink);
+}
+.case-stages dt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+/* What is true today is marked in orange; what is planned is an empty square. */
+.case-stages dt::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--ink);
+}
+.case-stages > div:first-child dt::before {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+.case-stages dd {
+  max-width: 36ch;
+  margin-top: clamp(16px, 2vw, 28px);
+  font-size: clamp(16px, 1.3vw, 19px);
+  line-height: 1.5;
+  color: var(--text);
+  text-wrap: pretty;
+}
+/* When there is only "now", it takes the room and is set larger. */
+.case-stages > div:only-child {
+  grid-column: 1 / -1;
+}
+.case-stages > div:only-child dd {
+  max-width: 29em;
+  font-size: clamp(20px, 2vw, 30px);
+  font-weight: 500;
+  line-height: 1.24;
+  letter-spacing: -0.028em;
+  color: inherit;
+}
+
+/* ---------- Two deliverables, one client ---------- */
+
+.case-pair {
+  display: grid;
+  row-gap: clamp(36px, 5vw, 76px);
+  padding: clamp(72px, 10.5vw, 160px) var(--edge);
+}
+.case-pair-halves {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(40px, 6vw, 72px) var(--gutter);
+}
+.case-half {
+  display: block;
+}
+.case-half .case-shot-frame {
+  border-color: var(--rule);
+}
+.case-half img {
+  transition: transform 1.2s var(--out);
+}
+.case-half-kind {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 16px;
+}
+.case-half-name {
+  display: block;
+  margin-top: clamp(10px, 1.4vw, 20px);
+  font-size: clamp(30px, 4.2vw, 68px);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  transition: color 0.3s ease;
+}
+.case-half-go {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  margin-top: 4px;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--soft);
+  transition: color 0.3s ease;
+}
+.case-half-go[data-here]::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  background: var(--accent);
+}
+a.case-half .case-half-go {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 5px;
+}
+@media (hover: hover) {
+  a.case-half:hover img {
+    transform: scale(1.03);
+  }
+  a.case-half:hover .case-half-name,
+  a.case-half:hover .case-half-go {
+    color: var(--accent);
+  }
+  a.case-half:hover .case-arrow {
+    transform: translateX(5px);
+  }
+}
+
+/* ---------- The way to the live site ---------- */
+
+.case-visit-line a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2em;
+  max-width: calc(100% + 0.28em);
+  min-height: 44px;
+  margin: 0 -0.14em;
+  padding: 0.1em 0.14em 0.14em;
+  font-size: clamp(32px, 5.4vw, 96px);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.055em;
+}
+.case-visit-line .case-arrow {
+  width: 0.6em;
+  height: 0.6em;
+  stroke-width: 1.15;
+}
+
+/* ---------- The end: the next project, then how to reach him ---------- */
+
+.case-ending {
+  position: relative;
+}
+.case-next {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  min-height: clamp(400px, 84svh, 880px);
+  padding: clamp(24px, 4.5svh, 48px) var(--edge) clamp(24px, 4.5svh, 48px);
+  overflow: hidden;
+  transition: color 0.35s ease;
+}
+/* The slab of orange that wipes across the band when it is pointed at. */
+.case-next::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--grain-dark) var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.75s var(--out);
+}
+.case-next-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  transition: color 0.35s ease;
+}
+.case-next-title {
+  margin-top: auto;
+  padding-top: 40px;
+}
+.case-next-title .case-word > b {
+  transition: color 0.35s ease;
+}
+.case-next-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: clamp(14px, 3svh, 30px);
+  padding-top: clamp(14px, 2.4svh, 24px);
+  border-top: 1px solid var(--rule);
+  font-size: clamp(16px, 1.5vw, 23px);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  transition: border-color 0.35s ease;
+}
+.case-next-foot .case-arrow {
+  width: clamp(26px, 3.2vw, 50px);
+  height: clamp(26px, 3.2vw, 50px);
+  stroke-width: 1;
+}
+/* Its letters rise into their windows when the band comes into view. */
+.case-next .case-word > span,
+.case-next .case-word > b {
+  transition:
+    transform 1s var(--out) calc(var(--c) * 0.035s),
+    color 0.35s ease;
+}
+.case-next[data-seen='false'] .case-word > span,
+.case-next[data-seen='false'] .case-word > b {
+  transform: translateY(110%);
+  transition: none;
+}
+.case-next:focus-visible {
+  outline-color: var(--ink);
+  outline-offset: -8px;
+  color: var(--ink);
+}
+.case-next:focus-visible::before {
+  transform: scaleX(1);
+}
+.case-next:focus-visible .case-next-top,
+.case-next:focus-visible .case-word > b {
+  color: var(--ink);
+}
+.case-next:focus-visible .case-next-foot {
+  border-color: rgb(28 28 28 / 0.4);
+}
+@media (hover: hover) {
+  .case-next:hover {
+    color: var(--ink);
+  }
+  .case-next:hover::before {
+    transform: scaleX(1);
+  }
+  .case-next:hover .case-next-top,
+  .case-next:hover .case-word > b {
+    color: var(--ink);
+  }
+  .case-next:hover .case-next-foot {
+    border-color: rgb(28 28 28 / 0.4);
+  }
+  .case-next:hover .case-arrow {
+    transform: translateX(14px);
+  }
+}
+
+.case-reach {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: var(--gutter);
+  align-items: start;
+  padding: clamp(36px, 5vw, 72px) var(--edge) clamp(20px, 4svh, 36px);
+  border-top: 1px solid var(--rule);
+}
+.case-reach-label {
+  padding-top: 1.1em;
+}
+.case-reach ul {
+  grid-column: 2 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px var(--gutter);
+}
+.case-reach li > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.34em;
+  min-height: 44px;
+  margin: 0 -0.14em;
+  padding: 0 0.14em;
+  font-size: clamp(22px, 2.4vw, 38px);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+}
+.case-reach li > a .case-arrow {
+  width: 0.56em;
+  height: 0.56em;
+}
+.case-reach small {
+  display: block;
+  margin-top: 4px;
+  text-transform: none;
+  letter-spacing: 0.04em;
+  overflow-wrap: anywhere;
+}
+.case-reach small a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin: -14px 0;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  transition: color 0.25s ease;
+}
+.case-reach small a:hover {
+  color: var(--paper);
+}
+.case-reach-line {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: clamp(40px, 7vw, 112px);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--soft);
+}
+.case-reach-line a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--paper);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* ---------- The "not found" page ---------- */
+
+.case-missing {
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+  padding: var(--menu-h) var(--edge) clamp(24px, 4.5svh, 48px);
+}
+.case-missing .case-subtitle {
+  margin-bottom: clamp(28px, 6svh, 72px);
+  color: var(--soft);
+}
+.case-missing-ways {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: var(--gutter);
+  align-items: start;
+  padding-top: 18px;
+  border-top: 1px solid var(--rule);
+  animation: settle 1s var(--out) 0.8s both;
+}
+.case-missing-ways > a {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.34em;
+  min-height: 44px;
+  margin: 0 -0.14em;
+  padding: 0 0.14em;
+  font-size: clamp(22px, 2.4vw, 38px);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+}
+.case-missing-ways > a .case-arrow {
+  width: 0.56em;
+  height: 0.56em;
+}
+.case-missing-ways ul {
+  grid-column: 2 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: var(--gutter);
+}
+.case-missing-ways li a {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 0;
+  font-size: clamp(17px, 1.5vw, 22px);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  transition: color 0.25s ease;
+}
+.case-missing-ways li a span {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--soft);
+}
+.case-missing-ways li a:hover {
+  color: var(--accent);
+}
+
+/* ---------- Narrower windows ---------- */
+
+@media (max-width: 900px) {
+  /* A section's heading moves above its content, which takes the whole width. */
+  .case-block > *,
+  .case-block > .case-label,
+  .case-overview[data-reading='split'] > .case-label,
+  .case-overview[data-reading='split'] > .case-lead,
+  .case-overview[data-reading='split'] > .case-body {
+    grid-column: 1 / -1;
+  }
+  .case-overview[data-reading='split'] > .case-lead {
+    padding-right: 0;
+  }
+  .case-label {
+    padding-top: 0;
+    margin-bottom: 8px;
+  }
+
+  /* The facts: two columns. A last one left alone takes the whole line. */
+  .case-glance dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .case-glance dl > div:nth-child(odd) {
+    padding-left: 0;
+    border-left: 0;
+  }
+  .case-glance dl > div:nth-child(n + 3) {
+    border-top: 1px solid var(--rule);
+  }
+  .case-glance dl > div:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+
+  .case-cells {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .case-cells > li:nth-child(odd) {
+    padding-left: 0;
+    border-left: 0;
+  }
+  .case-cells:has(> li:last-child:nth-child(odd))::after {
+    content: '';
+  }
+
+  .case-reach-label {
+    grid-column: 1 / -1;
+    padding: 0 0 20px;
+  }
+  .case-reach ul {
+    grid-column: 1 / -1;
+  }
+  .case-missing-ways > a,
+  .case-missing-ways ul {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 760px) {
+  .case-crumb-index > span {
+    display: none;
+  }
+  .case-crumb {
+    padding-left: 10px;
+  }
+  .case-crumb-index {
+    padding-right: 10px;
+  }
+  .case-crumb a {
+    padding: 0 10px;
+  }
+  .case-crumb a:first-child {
+    margin-left: -10px;
+  }
+
+  .case-hero-head {
+    min-height: clamp(400px, 64svh, 620px);
+  }
+  .case-next {
+    min-height: clamp(340px, 62svh, 560px);
+  }
+  .case-eyebrow {
+    grid-column: 1 / -1;
+  }
+  .case-domain {
+    grid-column: 1 / -1;
+    margin: 0 0 -14px;
+  }
+  /* The name may break between its words here, so it is sized to its longest word instead of the whole line. */
+  .case-title,
+  .case-next-title {
+    font-size: min(calc((100vw - 2 * var(--edge)) / var(--fit-word)), 27vw);
+    white-space: normal;
+  }
+
+  .case-rows > li {
+    grid-template-columns: 2.6rem minmax(0, 1fr);
+    row-gap: 8px;
+  }
+  .case-rows > li > p {
+    grid-column: 2;
+  }
+  .case[data-bleed] .case-rows > li {
+    grid-template-columns: 2.6rem minmax(0, 1fr);
+  }
+  .case[data-bleed] .case-rows h3 {
+    grid-column: 2;
+  }
+
+  .case-roles {
+    grid-template-columns: minmax(0, 1fr);
+    border-top: 0;
+  }
+  .case-roles > li {
+    border-top: 1px solid var(--ink);
+    border-left: 1px solid var(--rule);
+  }
+  .case-roles > li:not(:first-child) {
+    margin-top: 20px;
+  }
+  .case-roles > li:not(:first-child)::before {
+    left: -1px;
+  }
+
+  /* Pictures: desktop ones one under another, phone ones two across. */
+  .case-seq-row[data-row='pair'] > * {
+    grid-column: 1 / -1;
+  }
+  .case-seq-row[data-row='phones'] > * {
+    grid-column: span 2;
+  }
+  .case-seq-row[data-row='phones'] > :first-child:nth-last-child(-n + 3) {
+    grid-column: span 2;
+  }
+  .case-seq-row[data-row='phones'] > :only-child {
+    grid-column: 2 / 4;
+  }
+
+  .case-stages {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .case-pair-halves {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .case-reach ul {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .case-missing-ways ul {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .case-glance dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .case-glance dl > div {
+    padding-left: 0;
+    border-left: 0;
+  }
+  .case-glance dl > div:nth-child(n + 2) {
+    border-top: 1px solid var(--rule);
+  }
+
+  .case-cells {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .case-cells > li {
+    min-height: 0;
+    padding-left: 0;
+    border-left: 0;
+  }
+  .case-cells h3 {
+    padding-top: 20px;
+  }
+  .case-cells:has(> li:last-child)::after {
+    content: none;
+  }
+}

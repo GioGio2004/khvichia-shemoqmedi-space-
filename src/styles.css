@@ -40,6 +40,19 @@
   text-rendering: optimizeLegibility;
 }
 
+/*
+ * Inter at weight 600 with every letter drawn as one shape, for outlined text only. In the normal Inter file the K
+ * and the v are made of overlapping strokes, and -webkit-text-stroke outlines each stroke, which shows as notches
+ * inside the letters. Made by scripts/outline-font.py; basic Latin only.
+ */
+@font-face {
+  font-family: 'GK Outline';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./assets/fonts/inter-latin-600-outline.woff2') format('woff2');
+}
+
 html {
   scrollbar-width: none;
 }
@@ -242,21 +255,52 @@ body {
   transform: scale(1);
 }
 
+/* At the end of the list, set apart and quieter: his CV and his email, one step away on every page. */
+.menu-quick {
+  display: flex;
+  gap: 18px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.menu-quick a {
+  padding: 14px 0;
+  opacity: 0.72;
+  transition: opacity 0.3s ease;
+}
+.menu-quick a:hover,
+.menu-quick a:focus-visible {
+  opacity: 1;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
 /*
- * Contact: the bar comes all the way down and covers the screen. The sheet
- * is always charcoal, whatever the bar's colour was, with the same grain as
- * the page's other black surfaces. White is its main colour; orange is kept
- * for the name's outline, the icons and the mark on the CV button.
+ * About and Contact: the bar comes all the way down and covers the screen
+ * as a sheet, whatever the bar's colour was.
+ *
+ * Contact is always charcoal, with the same grain as the page's other black
+ * surfaces. White is its main colour; orange is kept for the name's outline,
+ * the icons and the mark on the CV button. About is always white, with
+ * charcoal type and orange only for the full stop and the small arrows.
  */
-.menu[data-contact='true'] {
-  --fg: var(--paper);
-  --bg: var(--ink);
+.menu[data-sheet] {
   width: 100vw;
   height: 100svh;
   border-bottom-left-radius: 0;
-  background-image: var(--grain-pale);
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+.menu[data-sheet='contact'] {
+  --fg: var(--paper);
+  --bg: var(--ink);
+  background-image: var(--grain-pale);
+}
+.menu[data-sheet='about'] {
+  --fg: var(--ink);
+  --bg: var(--paper);
 }
 /*
  * The sheet can scroll on a screen too small for it, but it never shows a scrollbar: while the bar is still growing
@@ -268,28 +312,37 @@ body {
 .menu::-webkit-scrollbar {
   display: none;
 }
-/* Like the links, the sheet's content keeps its final place the whole time; the growing bar uncovers it. */
-.menu-contact {
+/* Like the links, a sheet's content keeps its final place the whole time; the growing bar uncovers it. */
+.menu-sheet {
   position: absolute;
   top: var(--menu-h);
   right: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: clamp(28px, 6svh, 64px);
   width: 100vw;
   min-height: calc(100svh - var(--menu-h));
   padding: clamp(8px, 5svh, 56px) var(--edge) clamp(26px, 6.5svh, 64px);
   visibility: hidden;
   transition: visibility 0s 0.75s;
 }
-.menu[data-contact='true'] .menu-contact {
+/* A sheet takes the focus when something else on the page asked for it; it is not a control, so it shows no ring. */
+.menu-sheet:focus {
+  outline: none;
+}
+.menu[data-sheet='contact'] .menu-contact,
+.menu[data-sheet='about'] .menu-about {
   visibility: visible;
   transition-delay: 0s;
+}
+/* Contact, top to bottom: the name, a few words, the ways to reach him. They share the height evenly. */
+.menu-contact {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: clamp(20px, 4.5svh, 64px);
 }
 /* His name, hollow: only its outline, in orange, as wide as the screen allows. */
 .menu-name {
   margin-left: -0.04em;
+  font-family: 'GK Outline', 'Inter Variable', Inter, system-ui, sans-serif;
   font-size: min(14.3vw, 40svh);
   font-weight: 600;
   line-height: 0.98;
@@ -310,19 +363,174 @@ body {
   grid-template-columns: repeat(2, minmax(0, max-content));
   gap: clamp(16px, 3svh, 26px) clamp(32px, 6vw, 88px);
 }
-/* Everything on the sheet comes up one after another as it opens. */
+/* A few words between the name and the addresses, and two plain links. */
+.menu-intro {
+  --i: 0;
+  max-width: 46rem;
+}
+.menu-intro > p:first-child {
+  font-size: clamp(17px, 1.5vw, 24px);
+  font-weight: 500;
+  line-height: 1.32;
+  letter-spacing: -0.02em;
+  color: rgb(255 255 255 / 0.88);
+  text-wrap: pretty;
+}
+.menu-intro .menu-actions {
+  margin-top: clamp(4px, 1.2svh, 12px);
+}
+/* Plain text links with a small orange arrow, used on both sheets. Tall enough for a finger. */
+.menu-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 28px;
+}
+.menu-actions a {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.menu-actions svg {
+  width: 12px;
+  height: 12px;
+  color: var(--accent);
+  transition: transform 0.35s var(--out);
+}
+.menu-actions a:hover,
+.menu-actions a:focus-visible {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+.menu-actions a:hover svg,
+.menu-actions a:focus-visible svg {
+  transform: translateX(4px);
+}
+
+/*
+ * About, on the page's four columns: a small line of what he is, one large
+ * sentence, then the paragraph on the left and what stands behind it on the
+ * right, and a last row with three short lines and the links.
+ */
+.menu-about {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: var(--gutter);
+  row-gap: clamp(18px, 3.6svh, 44px);
+  align-content: space-between;
+}
+.menu-kicker,
+.menu-proof,
+.menu-creds small {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+.menu-kicker {
+  grid-column: 1 / -1;
+}
+.menu-headline {
+  --i: 0;
+  grid-column: 1 / 4;
+  margin-left: -0.04em;
+  font-size: clamp(34px, min(5.2vw, 10.5svh), 96px);
+  font-weight: 600;
+  line-height: 0.98;
+  letter-spacing: -0.055em;
+  text-wrap: balance;
+}
+.menu-headline b {
+  font-weight: inherit;
+  color: var(--accent);
+}
+.menu-about-body {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 28px var(--gutter);
+  align-items: start;
+}
+.menu-about-text {
+  --i: 1;
+  grid-column: 1 / 3;
+  max-width: 36em;
+  padding-right: var(--gutter);
+  font-size: clamp(15px, 1.2vw, 19px);
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  color: #262626;
+  text-wrap: pretty;
+}
+/* What stands behind it: four short entries under hairlines, never as cards. */
+.menu-creds {
+  grid-column: 3 / 5;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(14px, 2.6svh, 28px) var(--gutter);
+}
+.menu-creds li {
+  --i: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 11px;
+  border-top: 1px solid rgb(28 28 28 / 0.16);
+}
+.menu-creds strong {
+  margin-top: 3px;
+  font-size: clamp(15px, 1.15vw, 18px);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+.menu-creds span {
+  font-size: 13px;
+  line-height: 1.4;
+  color: #5c5c5c;
+}
+.menu-about-foot {
+  --i: 3;
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 32px;
+  padding-top: 10px;
+  border-top: 1px solid rgb(28 28 28 / 0.16);
+}
+.menu-proof {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 28px;
+}
+
+/* Everything on a sheet comes up one after another as it opens. */
 .menu-name,
+.menu-intro,
 .menu-reach li,
-.menu-cv {
+.menu-cv,
+.menu-kicker,
+.menu-headline,
+.menu-about-text,
+.menu-creds li,
+.menu-about-foot {
   opacity: 0;
   transform: translateY(18px);
   transition:
     opacity 0.25s ease,
     transform 0.4s var(--ease);
 }
-.menu[data-contact='true'] .menu-name,
-.menu[data-contact='true'] .menu-reach li,
-.menu[data-contact='true'] .menu-cv {
+.menu[data-sheet='contact'] :is(.menu-name, .menu-intro, .menu-reach li, .menu-cv),
+.menu[data-sheet='about'] :is(.menu-kicker, .menu-headline, .menu-about-text, .menu-creds li, .menu-about-foot) {
   opacity: 1;
   transform: none;
   transition:
@@ -511,9 +719,9 @@ body {
   translate: 0 calc(var(--lift, 0) * -24svh);
   animation: settle 1s var(--out) 1.3s both;
 }
+/* The first two columns of that row are free, so the status line has room to stay on one line. */
 .hero-about {
-  grid-column: 1;
-  max-width: 20rem;
+  grid-column: 1 / 3;
   font-size: 14px;
   font-weight: 500;
   line-height: 1.375;
@@ -521,6 +729,7 @@ body {
   color: #262626;
 }
 .hero-status,
+.hero-descriptor,
 .hero-place {
   font-family: var(--mono);
   font-size: 11px;
@@ -530,11 +739,13 @@ body {
   text-transform: uppercase;
   color: #737373;
 }
+/* Where the line does have to wrap (narrow windows), the lines come out even and the dot stays beside the first one. */
 .hero-status {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   margin-bottom: 12px;
+  text-wrap: balance;
 }
 /* The live dot: orange, with a ring that keeps going out from it. */
 .hero-status::before {
@@ -542,9 +753,19 @@ body {
   flex: none;
   width: 6px;
   height: 6px;
+  margin-top: 5px;
   background: var(--accent);
   border-radius: 50%;
   animation: pulse 2.2s ease-out infinite;
+}
+/* What he is, in three parts with a slash between them. */
+.hero-descriptor {
+  text-wrap: balance;
+}
+.hero-descriptor span + span::before {
+  content: '/';
+  margin: 0 0.7em;
+  color: var(--accent);
 }
 .hero-place {
   grid-column: 3;
@@ -675,7 +896,23 @@ body {
   gap: 4px;
   animation: settle 0.9s var(--out) calc(0.55s + var(--i) * 0.08s) both;
 }
-/* Pointing at a cell draws an orange line along its top, turns its number orange and lifts its name a little. */
+/*
+ * A cell that leads to a case study is a link, stretched over the whole cell. Pointing at such a cell (or tabbing to
+ * it) draws an orange line along its top, turns its number orange and lifts its name a little. A cell without a link
+ * stays still, so it does not promise one.
+ */
+.hero-band a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.hero-band a:focus-visible {
+  outline: none;
+}
+.hero-band li:has(a:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: -4px;
+}
 .hero-band li::after {
   content: '';
   position: absolute;
@@ -694,17 +931,20 @@ body {
 .hero-band li:last-child::after {
   right: calc(var(--edge) * -1);
 }
-.hero-band li:hover::after {
+.hero-band li:has(a):hover::after,
+.hero-band li:has(a:focus-visible)::after {
   transform: scaleX(1);
 }
 .hero-band strong {
   font-weight: inherit;
   transition: transform 0.3s var(--out);
 }
-.hero-band li:hover strong {
+.hero-band li:has(a):hover strong,
+.hero-band li:has(a:focus-visible) strong {
   transform: translateY(-2px);
 }
-.hero-band li:hover span {
+.hero-band li:has(a):hover span,
+.hero-band li:has(a:focus-visible) span {
   color: var(--accent);
 }
 .hero-band li:not(:first-child)::before {
@@ -747,7 +987,7 @@ body {
 }
 /* The word, set like the name on the opening screen, with the orange full stop. */
 .skills-title {
-  margin: 0 0 clamp(20px, 5svh, 52px) -0.045em;
+  margin: 0 0 clamp(8px, 1.6svh, 16px) -0.045em;
   padding: 0 var(--edge);
   font-size: min(10.2vw, 30svh);
   font-weight: 600;
@@ -757,6 +997,16 @@ body {
 .skills-title b {
   font-weight: inherit;
   color: var(--accent);
+}
+/* One quiet line under the word. */
+.skills-sub {
+  margin-bottom: clamp(20px, 4.4svh, 46px);
+  padding: 0 var(--edge);
+  font-size: clamp(16px, 1.45vw, 22px);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: rgb(255 255 255 / 0.72);
+  text-wrap: balance;
 }
 /*
  * The two blocks: orange from the left edge to the first column line, and
@@ -814,7 +1064,15 @@ body {
   /* The colour a pointed-at name turns, and what goes on top of that colour. */
   --hi: var(--paper);
   --on-hi: var(--ink);
-  --soft: rgb(28 28 28 / 0.62);
+  /*
+   * The quiet parts, each kept readable against the card (checked against the grained colour, not the flat one):
+   *   --soft   small text (the counts): at least 4.5 to 1. On orange only solid charcoal reaches that.
+   *   --slash  the slashes between names: at least 3 to 1
+   *   --dim    how far the other names step back while one is pointed at: still at least 3 to 1
+   */
+  --soft: var(--ink);
+  --slash: rgb(28 28 28 / 0.75);
+  --dim: 0.75;
   /* The grain laid over the card's colour. */
   --tex: var(--grain-dark);
 
@@ -834,6 +1092,8 @@ body {
   --hi: var(--accent);
   --on-hi: var(--ink);
   --soft: rgb(255 255 255 / 0.55);
+  --slash: rgb(255 255 255 / 0.4);
+  --dim: 0.4;
   --tex: var(--grain-pale);
 }
 .stack-card[data-tone='paper'] {
@@ -842,6 +1102,8 @@ body {
   --hi: var(--accent);
   --on-hi: var(--paper);
   --soft: var(--mute);
+  --slash: #8a8a8a;
+  --dim: 0.5;
   --tex: none;
 }
 
@@ -889,18 +1151,16 @@ body {
   display: flex;
   align-items: baseline;
   gap: 0.34em;
-  transition: opacity 0.35s ease;
 }
 /* A thin slash between names. */
 .stack-names li:not(:last-child)::after {
   content: '/';
   font-weight: 300;
-  color: var(--soft);
-  opacity: 0.5;
+  color: var(--slash);
 }
-/* While one name is pointed at, the others step back. */
-.stack-names:has(button[data-on='true']) li:not(:has(button[data-on='true'])) {
-  opacity: 0.22;
+/* While one name is pointed at, the others step back (the names only; the slashes stay as they are). */
+.stack-names:has(button[data-on='true']) button:not([data-on='true']) {
+  opacity: var(--dim);
 }
 .stack-names button {
   position: relative;
@@ -910,6 +1170,7 @@ body {
   color: inherit;
   cursor: default;
   perspective: 600px;
+  transition: opacity 0.35s ease;
 }
 .stack-names button > span {
   position: relative;
@@ -946,6 +1207,7 @@ body {
 
 /* outline: the name empties out to its outline. */
 .stack-names button[data-fx='outline'] > span {
+  font-family: 'GK Outline', 'Inter Variable', Inter, system-ui, sans-serif;
   -webkit-text-stroke: 0.018em transparent;
 }
 .stack-names button[data-fx='outline'][data-on='true'] > span {
@@ -1323,7 +1585,7 @@ body {
 .footer-stage {
   /* Written by the script: how far the orange has risen, and how far the black has risen into the letters. */
   --flood: 0;
-  --ink: 0;
+  --fill: 0;
 
   position: sticky;
   top: 0;
@@ -1356,20 +1618,53 @@ body {
 .footer-line {
   position: absolute;
   right: var(--edge);
-  bottom: clamp(20px, 4.5svh, 40px);
+  bottom: clamp(8px, calc(4.5svh - 12px), 28px);
   left: var(--edge);
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 0 16px;
   font-size: 15px;
   font-weight: 500;
   letter-spacing: -0.01em;
   color: var(--ink);
-  opacity: clamp(0, calc(var(--ink) * 4 - 3), 1);
+  opacity: clamp(0, calc(var(--fill) * 4 - 3), 1);
 }
-.footer-line a {
+/* On the right: a way to open Contact, and the way back up. Each is tall enough for a finger. */
+.footer-links {
+  display: flex;
+  gap: 24px;
+}
+.footer-links a,
+.footer-links button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
   text-decoration: underline;
   text-underline-offset: 4px;
+  cursor: pointer;
+}
+/* The orange ring would not show on the orange stage. */
+.footer-line :focus-visible {
+  outline-color: var(--ink);
+}
+/* On the narrowest phones the year alone leaves room for the two links on the same row, under the letters. */
+@media (max-width: 360px) {
+  .footer-name {
+    display: none;
+  }
+}
+/* Without the drawn letters nothing turns the stage orange, so the line shows at once, in white on the charcoal. */
+.footer-stage[data-plain] .footer-line {
+  color: var(--paper);
+  opacity: 1;
+}
+.footer-stage[data-plain] .footer-line :focus-visible {
+  outline-color: var(--accent);
 }
 /* Only used when the browser cannot draw the letters. */
 .footer-word {
@@ -1424,10 +1719,14 @@ body {
   outline-offset: -6px;
 }
 
-/* The name of the project in the middle, just above the row, and what it is. */
+/*
+ * The name of the project in the middle, just above the row, and what it is. The middle panel's top edge is 23.75%
+ * down the section (see measure() and uLift in Gallery.tsx), so the block is hung from its own bottom a little above
+ * that line: on any screen the small line under the name clears the panel.
+ */
 .work-head {
   position: absolute;
-  top: clamp(64px, 10.5svh, 120px);
+  bottom: calc(76.25% + clamp(8px, 1.4svh, 18px));
   right: var(--edge);
   left: var(--edge);
   text-align: center;
@@ -1439,7 +1738,7 @@ body {
   overflow: hidden;
   padding-bottom: 0.12em;
   margin-bottom: -0.04em;
-  font-size: min(6.4vw, 13svh);
+  font-size: min(6.4vw, 10.5svh);
   font-weight: 600;
   line-height: 1;
   letter-spacing: -0.05em;
@@ -1458,17 +1757,155 @@ body {
   color: rgb(255 255 255 / 0.6);
   animation: settle 0.8s var(--out) 0.12s both;
 }
-.work-count {
+/*
+ * Under the row, on three columns: on the left where the row is, with a button to either side; in the middle one
+ * line about the project and the three ways into it; on the right what he did on it and where it stands. The block
+ * itself lets the pointer through to the row; only its buttons and links take it.
+ */
+.work-foot {
   position: absolute;
-  right: 0;
-  bottom: clamp(48px, 12svh, 110px);
-  left: 0;
+  right: var(--edge);
+  bottom: clamp(10px, 2.4svh, 28px);
+  left: var(--edge);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: end;
+  gap: 8px 24px;
+  pointer-events: none;
+  opacity: calc(1 - var(--flat, 0) * 2);
+}
+.work-nav {
+  justify-self: start;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  pointer-events: auto;
+}
+.work-nav p {
+  min-width: 68px;
   font-size: 14px;
   font-weight: 500;
   text-align: center;
   font-variant-numeric: tabular-nums;
-  pointer-events: none;
-  opacity: calc(1 - var(--flat, 0) * 2);
+}
+.work-nav button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgb(255 255 255 / 0.24);
+  cursor: pointer;
+  transition:
+    color 0.3s ease,
+    background-color 0.3s ease,
+    border-color 0.3s ease;
+}
+.work-nav button:hover,
+.work-nav button:focus-visible {
+  color: var(--ink);
+  background: var(--paper);
+  border-color: var(--paper);
+}
+.work-nav svg,
+.work-actions svg {
+  width: 12px;
+  height: 12px;
+}
+.work-story {
+  max-width: 46rem;
+  text-align: center;
+}
+.work-tagline {
+  margin-bottom: clamp(6px, 1.2svh, 12px);
+  font-size: clamp(14px, 1.15vw, 17px);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: rgb(255 255 255 / 0.84);
+  text-wrap: balance;
+  animation: settle 0.8s var(--out) 0.16s both;
+}
+.work-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  pointer-events: auto;
+}
+/* Three different things, so three different looks: a white slab for the case study, an outline for the preview, plain text for the way out. */
+.work-actions a,
+.work-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 0 17px;
+  border: 1px solid rgb(255 255 255 / 0.24);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color 0.3s ease,
+    background-color 0.3s ease,
+    border-color 0.3s ease;
+}
+.work-actions .work-primary {
+  color: var(--ink);
+  background: var(--paper);
+  border-color: var(--paper);
+}
+.work-actions .work-primary svg {
+  color: var(--accent);
+  transition:
+    color 0.3s ease,
+    transform 0.35s var(--out);
+}
+.work-actions .work-primary:hover,
+.work-actions .work-primary:focus-visible {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.work-actions .work-primary:hover svg,
+.work-actions .work-primary:focus-visible svg {
+  color: var(--ink);
+  transform: translateX(3px);
+}
+.work-actions button:hover,
+.work-actions button:focus-visible {
+  border-color: var(--paper);
+}
+.work-actions a:last-child {
+  padding: 0 10px;
+  border-color: transparent;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+.work-actions a:last-child:hover,
+.work-actions a:last-child:focus-visible {
+  color: var(--accent);
+}
+/* A long and a short wording of the same label; the short one is for phones. */
+.work [data-narrow] {
+  display: none;
+}
+.work-meta {
+  justify-self: end;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 24rem;
+  padding-bottom: 6px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0.12em;
+  text-align: right;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.62);
+  animation: settle 0.8s var(--out) 0.2s both;
 }
 
 /*
@@ -1508,7 +1945,13 @@ body {
   opacity: 1;
   transform: none;
 }
+.work-bar > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .work-bar > span:last-child {
+  flex: none;
   display: flex;
   gap: 22px;
 }
@@ -1535,6 +1978,27 @@ body {
 }
 .work-view iframe {
   border: 0;
+}
+/* While the live site has not answered yet: a small line in the window's corner, over the picture of the site. */
+.work-wait {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  max-width: calc(100% - 24px);
+  padding: 9px 13px;
+  color: var(--paper);
+  background: var(--ink);
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0;
+  transition: opacity 0.35s ease 0.4s;
+}
+.work[data-flat='true'] .work-wait {
+  opacity: 1;
+}
+.work-wait a {
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 /* The live site shows once the panel is flat and the page has loaded; the long picture as soon as it is flat. */
 .work[data-flat='true'] .work-view iframe[data-ready='true'],
@@ -1577,7 +2041,9 @@ body {
 .work-plain li {
   display: flex;
   flex: none;
-  align-items: flex-end;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 10px;
   width: min(74vw, 720px);
   height: 52%;
   padding: 28px;
@@ -1588,6 +2054,20 @@ body {
   font-weight: 600;
   line-height: 0.98;
   letter-spacing: -0.05em;
+}
+
+.work-plain li a:last-child {
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+/* On a short phone screen there is no room for the line about the project; the name and the buttons stay. */
+@media (max-width: 760px) and (max-height: 700px) {
+  .work-tagline {
+    display: none;
+  }
 }
 
 /* ---------- Movements ---------- */
@@ -1652,6 +2132,35 @@ body {
   }
 }
 
+/* ---------- Tablets and small laptops: the two sheets get simpler columns ---------- */
+
+@media (min-width: 761px) and (max-width: 1000px) {
+  /* The opened bar holds four words and two small links: here it needs nearly the whole width. */
+  :root {
+    --menu-open: 94vw;
+  }
+  /* The CV button drops under the addresses, so no address has to break in the middle of a word. */
+  .menu-reach {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .menu-cv {
+    max-width: 22rem;
+  }
+  .menu-headline {
+    grid-column: 1 / -1;
+  }
+  .menu-about-text,
+  .menu-creds {
+    grid-column: 1 / -1;
+  }
+  .menu-about-text {
+    max-width: 40em;
+  }
+  .menu-creds {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
 /* ---------- Phones and narrow windows: two columns ---------- */
 
 @media (max-width: 760px) {
@@ -1662,8 +2171,13 @@ body {
     --menu-row: 58px;
   }
 
+  /* The list, and under it one short row for the two quiet links. */
   .menu[data-open='true'] {
-    height: calc(var(--menu-h) + var(--count) * var(--menu-row) + 28px);
+    height: calc(var(--menu-h) + var(--count) * var(--menu-row) + 44px + 20px);
+  }
+  /* With a sheet down the list closes up, so the sheet starts higher on a small screen. */
+  .menu[data-sheet] {
+    --menu-row: 42px;
   }
   .menu-links {
     top: var(--menu-h);
@@ -1682,6 +2196,18 @@ body {
     font-weight: 600;
     line-height: var(--menu-row);
     letter-spacing: -0.04em;
+    transition:
+      font-size 0.5s var(--ease),
+      line-height 0.5s var(--ease);
+  }
+  .menu[data-sheet] .menu-link {
+    font-size: 24px;
+  }
+  .menu-quick {
+    gap: 24px;
+    height: 44px;
+    align-items: center;
+    font-size: 12px;
   }
   .menu-link::before {
     display: none;
@@ -1689,14 +2215,55 @@ body {
   .menu-link[data-on='true'] {
     color: var(--accent);
   }
-  .menu[data-contact='true'] {
+  .menu[data-sheet] {
     height: 100svh;
   }
-  .menu-contact {
-    top: calc(var(--menu-h) + var(--count) * var(--menu-row) + 8px);
+  .menu-sheet {
+    top: calc(var(--menu-h) + var(--count) * var(--menu-row) + 44px + 8px);
     display: block;
     min-height: 0;
     padding: 10px var(--edge) 30px;
+    transition:
+      visibility 0s 0.75s,
+      top 0.5s var(--ease);
+  }
+  .menu-intro {
+    margin-top: 16px;
+  }
+  .menu-intro > p:first-child {
+    font-size: 16px;
+  }
+  /* About in one column: the sentence, the paragraph, the four entries two by two, the links. */
+  .menu-kicker {
+    margin-top: 6px;
+  }
+  .menu-headline {
+    margin-top: 12px;
+    font-size: clamp(30px, 10.4vw, 46px);
+    line-height: 1;
+  }
+  .menu-about-body {
+    display: block;
+    margin-top: 18px;
+  }
+  .menu-about-text {
+    max-width: none;
+    padding-right: 0;
+    font-size: 15px;
+  }
+  .menu-creds {
+    margin-top: 22px;
+    gap: 16px var(--gutter);
+  }
+  .menu-about-foot {
+    display: block;
+    margin-top: 22px;
+  }
+  .menu-proof {
+    display: block;
+  }
+  .menu-about-foot .menu-actions {
+    margin-top: 6px;
   }
   .menu-name {
     font-size: 13vw;
@@ -1757,6 +2324,7 @@ body {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .hero-about {
+    grid-column: 1;
     font-size: 13px;
   }
   .hero-status {
@@ -1767,11 +2335,26 @@ body {
   .hero-status::before {
     margin-top: 4px;
   }
+  /* Beside the silhouette there is one narrow column: the three parts go one under another. */
+  .hero-descriptor {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+  }
+  .hero-descriptor span {
+    display: block;
+  }
+  .hero-descriptor span + span::before {
+    display: none;
+  }
   .hero-place {
     display: none;
   }
   .hero-band li::after {
     display: none;
+  }
+  /* A finger needs more room than the line of text: the link reaches a little above and below its cell. */
+  .hero-band a::after {
+    inset: -10px 0;
   }
 
   /* The name takes two lines here, as large as the screen allows. */
@@ -1830,10 +2413,16 @@ body {
   .skills-steps [data-tone='accent'] {
     font-size: 11vw;
   }
+  /* The second block holds a whole sentence, so on a narrow screen it may grow taller than the first. */
   .skills-steps [data-tone='paper'] {
-    padding-left: 16px;
-    font-size: clamp(17px, 5vw, 24px);
-    line-height: 1.05;
+    height: auto;
+    min-height: var(--step-h);
+    padding: 10px var(--edge) 10px 16px;
+    font-size: clamp(15px, 4.4vw, 22px);
+    line-height: 1.1;
+  }
+  .skills-sub {
+    font-size: 15px;
   }
 
   /* The frame takes nearly the whole width; room is kept above it for the headline and under it for the comment and the count. */
@@ -1871,12 +2460,49 @@ body {
     font-size: calc(26px + (1 - var(--open)) * 9vw);
   }
 
+  /* The panel is placed differently here (see measure() in Gallery.tsx), with plenty of room above it. */
+  .work-head {
+    top: clamp(64px, 10.5svh, 120px);
+    bottom: auto;
+  }
   .work-head h3 {
-    font-size: min(11vw, 9svh);
+    font-size: min(10vw, 9svh);
     white-space: normal;
   }
-  .work-bar a {
+  /* Under the row on a phone: the three ways in on one row with shorter words, then where the row is. */
+  .work-foot {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    gap: 6px;
+    bottom: 8px;
+  }
+  .work-nav {
+    justify-self: center;
+    order: 2;
+  }
+  .work-meta {
     display: none;
+  }
+  .work-actions {
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+  .work-actions a,
+  .work-actions button {
+    padding: 0 12px;
+    font-size: 13px;
+  }
+  .work [data-wide] {
+    display: none;
+  }
+  .work [data-narrow] {
+    display: inline;
+  }
+  .work-bar {
+    padding: 0 12px;
+  }
+  .work-bar > span:last-child {
+    gap: 14px;
   }
 }
 

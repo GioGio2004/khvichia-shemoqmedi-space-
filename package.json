@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "photos": "node scripts/photos.mjs",
     "road": "node scripts/road.mjs",
-    "cv": "node scripts/cv.mjs"
+    "cv": "node scripts/cv.mjs",
+    "og": "node scripts/og.mjs",
+    "qa:shots": "node scripts/qa-shots.mjs"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.3.0",
@@ -25,6 +27,7 @@
     "three": "^0.187.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@fontsource-variable/noto-sans-georgian": "^5.3.0",
     "@tailwindcss/vite": "^4.3.5",
     "@types/node": "^24.19.2",
@@ -33,6 +36,7 @@
     "@types/three": "^0.187.0",
     "@vitejs/plugin-react": "^6.1.2",
     "oxlint": "^1.90.0",
+    "playwright-core": "^1.65.1",
     "sharp": "^0.35.5",
     "tailwindcss": "^4.3.5",
     "typescript": "~7.0.2",

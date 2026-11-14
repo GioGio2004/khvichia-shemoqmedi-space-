@@ -1,44 +1,130 @@
 /**
- * The last step of `npm run build`. It makes the built page show up without
- * waiting for any script:
+ * The last step of `npm run build`. It writes every page of the site into
+ * its own finished HTML file, so each one shows up without waiting for any
+ * script:
  *
- *   1. the page is written into dist/index.html as plain HTML (drawn by
+ *   /                 dist/index.html              (from the built index.html)
+ *   /work/<slug>      dist/work/<slug>/index.html  (from the built case.html)
+ *   anything else     dist/404.html                (from the built case.html)
+ *
+ * For each page:
+ *
+ *   1. the page is written into the HTML as plain markup (drawn by
  *      src/entry-server.tsx, which the step before this one built into
  *      dist-ssr/); the browser's script then only takes it over,
- *   2. the stylesheet is put inside the HTML, so the first paint needs one
- *      file and not two,
- *   3. the text font is announced at the top, so it starts loading at once.
+ *   2. the stylesheets are put inside the HTML, so the first paint needs one
+ *      file and not several,
+ *   3. the text font is announced at the top, so it starts loading at once,
+ *   4. the head gets what the page says about itself: a case study gets its
+ *      own title, description, address and share picture; the home page keeps
+ *      the head written in index.html and only gains the share picture.
+ *
+ * dist/case.html itself is only the mould for those pages and is removed at
+ * the end.
  */
-import { readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { dirname } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const dist = `${root}dist/`
 const server = `${root}dist-ssr/`
 
-const { render } = await import(pathToFileURL(`${server}entry-server.js`).href)
-let html = readFileSync(`${dist}index.html`, 'utf8')
+const { render, paths } = await import(pathToFileURL(`${server}entry-server.js`).href)
 
 const EMPTY = '<div id="root"></div>'
-if (!html.includes(EMPTY)) throw new Error('index.html has no empty #root to fill.')
-const page = render()
-html = html.replace(EMPTY, () => `<div id="root">${page}</div>`)
+const kB = (text) => `${(text.length / 1024).toFixed(0)} kB`
+const attr = (text) => text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+const meta = (key, name, content) => `<meta ${key}="${name}" content="${attr(content)}" />`
 
-// The stylesheet, inside the page. Its addresses are already absolute (/assets/...), so it reads the same from here.
-let inlined = 0
-html = html.replace(/<link rel="stylesheet"[^>]*href="(\/assets\/[^"]+\.css)"[^>]*>/, (_tag, href) => {
-  const css = readFileSync(`${dist}${href.slice(1)}`, 'utf8')
-  if (/url\(\s*['"]?\.\.?\//.test(css)) throw new Error('The stylesheet has relative addresses; it cannot be moved into the page as it is.')
-  inlined = css.length
-  return `<style>${css}</style>`
-})
-if (!inlined) throw new Error('No stylesheet link found in index.html.')
-
-// The font the whole page is set in.
+// The font the whole site is set in.
 const font = readdirSync(`${dist}assets`).find((name) => /^inter-latin-wght-normal-.*\.woff2$/.test(name))
 if (!font) throw new Error('The Inter font file was not found in dist/assets.')
-html = html.replace('</title>', () => `</title>\n    <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/${font}" />`)
+const preload = `<link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/${font}" />`
 
-writeFileSync(`${dist}index.html`, html)
+// The two built moulds, read once before anything is written over them.
+const shells = { 'index.html': readFileSync(`${dist}index.html`, 'utf8'), 'case.html': readFileSync(`${dist}case.html`, 'utf8') }
+
+/** Puts every stylesheet the page links to inside the page. Their addresses are already absolute (/assets/...), so they read the same from there. */
+function inlineStyles(html, file) {
+  let size = 0
+  const out = html.replace(/<link rel="stylesheet"[^>]*href="(\/assets\/[^"]+\.css)"[^>]*>/g, (_tag, href) => {
+    const css = readFileSync(`${dist}${href.slice(1)}`, 'utf8')
+    if (/url\(\s*['"]?\.\.?\//.test(css)) throw new Error(`${href} has relative addresses; it cannot be moved into the page as it is.`)
+    size += css.length
+    return `<style>${css}</style>`
+  })
+  if (!size) throw new Error(`No stylesheet link found in ${file}.`)
+  return [out, size]
+}
+
+/** What the page says about how it is shared: the picture, and the kind of card to show it in. */
+function shareTags(share) {
+  return [
+    meta('property', 'og:site_name', share.siteName),
+    meta('property', 'og:image', share.image),
+    meta('property', 'og:image:type', 'image/png'),
+    meta('property', 'og:image:width', '1200'),
+    meta('property', 'og:image:height', '630'),
+    meta('property', 'og:image:alt', share.imageAlt),
+    meta('name', 'twitter:card', 'summary_large_image'),
+    meta('name', 'twitter:image', share.image),
+  ]
+}
+
+/** The whole head of a page that is not the home page. */
+function headTags(head, share) {
+  return [
+    `<title>${attr(head.title)}</title>`,
+    preload,
+    meta('name', 'description', head.description),
+    head.index ? null : meta('name', 'robots', 'noindex'),
+    head.canonical ? `<link rel="canonical" href="${attr(head.canonical)}" />` : null,
+    meta('property', 'og:type', head.type),
+    meta('property', 'og:title', head.title),
+    meta('property', 'og:description', head.description),
+    head.canonical ? meta('property', 'og:url', head.canonical) : null,
+    ...shareTags(share),
+    meta('name', 'twitter:title', head.title),
+    meta('name', 'twitter:description', head.description),
+  ].filter(Boolean)
+}
+
+// Every share picture a page names must be there (they are made by `npm run og` and kept in public/og/).
+const missingPictures = new Set()
+
+for (const path of paths) {
+  const page = render(path)
+  let html = shells[page.shell]
+  if (!html.includes(EMPTY)) throw new Error(`${page.shell} has no empty #root to fill.`)
+  html = html.replace(EMPTY, () => `<div id="root">${page.html}</div>`)
+
+  const [withStyles, styles] = inlineStyles(html, page.shell)
+  html = withStyles
+
+  if (page.head) {
+    // A case study or the "not found" page: the mould has only a placeholder title.
+    const title = /<title>[^<]*<\/title>/
+    if (!title.test(html)) throw new Error(`${page.shell} has no <title> to replace.`)
+    html = html.replace(title, () => headTags(page.head, page.share).join('\n    '))
+  } else {
+    // The home page: its head stays as index.html has it, with the font and the share picture added.
+    html = html.replace('</title>', () => `</title>\n    ${preload}`)
+    html = html.replace('</head>', () => `  ${shareTags(page.share).join('\n    ')}\n  </head>`)
+  }
+
+  const picture = new URL(page.share.image).pathname
+  if (!existsSync(`${dist}${picture.slice(1)}`)) missingPictures.add(picture)
+
+  const file = `${dist}${page.file}`
+  mkdirSync(dirname(file), { recursive: true })
+  writeFileSync(file, html)
+  console.log(`prerendered ${path.padEnd(22)} ${page.file.padEnd(32)} page ${kB(page.html)}, styles ${(styles / 1024).toFixed(0)} kB, file ${kB(html)}`)
+}
+
+rmSync(`${dist}case.html`, { force: true })
 rmSync(server, { recursive: true, force: true })
-console.log(`prerendered: page ${(page.length / 1024).toFixed(0)} kB, styles ${(inlined / 1024).toFixed(0)} kB, index.html ${(html.length / 1024).toFixed(0)} kB`)
+
+if (missingPictures.size) {
+  throw new Error(`These share pictures are named in the pages but are not in public/: ${[...missingPictures].join(', ')}. Run "npm run og" and build again.`)
+}

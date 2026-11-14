@@ -1,10 +1,12 @@
-import { Component, lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { Component, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { hero } from '../content/hero'
+import { lazyWithRetry } from '../lib/retry'
+import { openSheet } from '../lib/sheet'
 import { footerWord, road } from '../content/road'
 import { scrollLength } from './timeline'
 
 // three.js is only needed for the letters, so it is a separate file, fetched when the footer comes near (see `near`).
-const Letters = lazy(() => import('./Letters'))
+const Letters = lazyWithRetry(() => import('./Letters'))
 
 // One photo per letter: the last photos of the side scroll, in its order.
 const word = footerWord.slice(0, road.length)
@@ -12,10 +14,13 @@ const photos = road.slice(-word.length)
 const year = new Date().getFullYear()
 
 /** If the browser cannot draw the letters (no WebGL), the word is simply set in type. */
-class LettersBoundary extends Component<{ fallback: ReactNode; children: ReactNode }, { failed: boolean }> {
+class LettersBoundary extends Component<{ fallback: ReactNode; onFail: () => void; children: ReactNode }, { failed: boolean }> {
   state = { failed: false }
   static getDerivedStateFromError() {
     return { failed: true }
+  }
+  componentDidCatch() {
+    this.props.onFail()
   }
   render() {
     return this.state.failed ? this.props.fallback : this.props.children
@@ -42,6 +47,10 @@ export function Footer() {
   const [near, setNear] = useState(false)
   // True once the orange has taken over the stage.
   const [flooded, setFlooded] = useState(false)
+  // True once the last line (copyright, Contact, Back to top) has started to show; until then it cannot be reached.
+  const [ended, setEnded] = useState(false)
+  // True if the letters could not be drawn: the word is plain type and the last line is simply there.
+  const [plain, setPlain] = useState(false)
   const taken = useRef(false)
 
   useEffect(() => {
@@ -79,8 +88,9 @@ export function Footer() {
 
   const onEnding = useCallback((flood: number, ink: number) => {
     stage.current?.style.setProperty('--flood', flood.toFixed(4))
-    stage.current?.style.setProperty('--ink', ink.toFixed(4))
+    stage.current?.style.setProperty('--fill', ink.toFixed(4))
     setFlooded(flood > 0.94)
+    setEnded(ink > 0.76)
   }, [])
 
   // The section is dark until the orange covers it; the menu tab and the monogram follow that.
@@ -96,10 +106,10 @@ export function Footer() {
       data-theme={flooded ? 'accent' : 'dark'}
       style={{ height: `calc(${(scrollLength + 1).toFixed(2)} * 100svh)` }}
     >
-      <div ref={stage} className="footer-stage">
+      <div ref={stage} className="footer-stage" data-plain={plain || undefined}>
         <div className="footer-flood" aria-hidden />
         <div className="footer-letters" data-live={inView || undefined} aria-hidden>
-          <LettersBoundary fallback={<p className="footer-word">{word}</p>}>
+          <LettersBoundary fallback={<p className="footer-word">{word}</p>} onFail={() => setPlain(true)}>
             {near ? (
               <Suspense fallback={null}>
                 <Letters word={word} photos={photos} section={section} onTaken={onTaken} onEnding={onEnding} inView={inView} />
@@ -108,11 +118,16 @@ export function Footer() {
           </LettersBoundary>
         </div>
 
-        <div className="footer-line">
+        <div className="footer-line" inert={!(ended || plain)}>
           <p>
-            © {year} {hero.name}
+            © {year} <span className="footer-name">{hero.name}</span>
           </p>
-          <a href="#top">Back to top</a>
+          <p className="footer-links">
+            <button type="button" onClick={() => openSheet('contact')}>
+              Contact
+            </button>
+            <a href="#top">Back to top</a>
+          </p>
         </div>
       </div>
     </footer>

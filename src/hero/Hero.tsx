@@ -75,6 +75,11 @@ export function Hero() {
       <div className="hero-rule">
         <div className="hero-about">
           <p className="hero-status">{hero.status}</p>
+          <p className="hero-descriptor">
+            {hero.descriptor.map((part) => (
+              <span key={part}>{part}</span>
+            ))}
+          </p>
         </div>
         <p className="hero-place">{hero.place}</p>
       </div>
@@ -115,9 +120,9 @@ export function Hero() {
 
       <ul className="hero-band" data-theme="dark">
         {hero.fields.map((field, i) => (
-          <li key={field} style={{ '--i': i } as CSSProperties}>
+          <li key={field.label} style={{ '--i': i } as CSSProperties}>
             <span>{two(i + 1)}</span>
-            <strong>{field}</strong>
+            <strong>{field.href ? <a href={field.href}>{field.label}</a> : field.label}</strong>
           </li>
         ))}
       </ul>

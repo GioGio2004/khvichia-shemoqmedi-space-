@@ -1,5 +1,5 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { useEffect, useMemo, useRef, useState, type RefObject } from 'react'
+import { useEffect, useImperativeHandle, useMemo, useRef, useState, type RefObject } from 'react'
 import { LinearFilter, LinearMipmapLinearFilter, NoColorSpace, TextureLoader, Vector2, type Mesh, type ShaderMaterial, type Texture } from 'three'
 import type { Site } from '../content/sites'
 import { openWindow } from './layout'
@@ -33,6 +33,12 @@ function measure(vw: number, vh: number, narrow: boolean) {
 const mix = (a: number, b: number, t: number) => a + (b - a) * t
 const inOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
 
+/** What the page's own buttons can ask of the row. */
+export type GalleryApi = {
+  /** Move on by this many projects (1 = next, -1 = previous). */
+  step: (by: number) => void
+}
+
 type RowProps = {
   sites: Site[]
   /** The element that receives the dragging, the clicks, the arrow keys and the sideways scrolling. */
@@ -40,14 +46,21 @@ type RowProps = {
   inView: boolean
   /** Whether the panel in the middle is opened (flat, showing the site). */
   open: boolean
-  onActive: (index: number) => void
+  /** The project the row starts on. */
+  initial: number
+  /** Filled in here, for the page's previous and next buttons. */
+  api: RefObject<GalleryApi | null>
+  /** True while the row must not move on by itself (the keyboard is in the section, or the pointer is on its buttons). */
+  paused: RefObject<boolean>
+  /** Told whenever another project comes to the middle, and whether a person moved it there (not the row by itself). */
+  onActive: (index: number, byPerson: boolean) => void
   /** The screen of the middle panel was clicked. */
   onOpen: () => void
   /** Told as the middle panel opens and folds back: 0 = bent in the row, 1 = flat. */
   onFlat: (flat: number) => void
 }
 
-function Row({ sites, stage, inView, open, onActive, onOpen, onFlat }: RowProps) {
+function Row({ sites, stage, inView, open, initial, api, paused, onActive, onOpen, onFlat }: RowProps) {
   // The row loops for ever, so a short list is repeated until it is longer than the screen.
   const slots = useMemo(() => {
     const list: number[] = []
@@ -114,14 +127,28 @@ function Row({ sites, stage, inView, open, onActive, onOpen, onFlat }: RowProps)
 
   const meshes = useRef<(Mesh | null)[]>([])
   /** Positions are counted in panels: 0 is the first panel in the middle, 1 the second, and so on. */
-  const motion = useRef({ target: 0, current: 0, previous: 0, speed: 0, dragging: false, pointer: -1, startX: 0, startY: 0, startTarget: 0, lastX: 0, lastT: 0, toss: 0, moved: 0 })
+  const motion = useRef({ target: initial, current: initial, previous: initial, speed: 0, dragging: false, pointer: -1, startX: 0, startY: 0, startTarget: 0, lastX: 0, lastT: 0, toss: 0, moved: 0 })
   /** Things the pointer handlers need that are only known while drawing: refreshed every frame. */
-  const live = useRef({ panelsPerPixel: 0, screenW: 0, screenH: 0, centerY: 0, flat: 0, hover: false, touched: 0 })
+  const live = useRef({ panelsPerPixel: 0, screenW: 0, screenH: 0, centerY: 0, flat: 0, hover: false, touched: 0, byItself: false })
   const introAt = useRef<number | null>(null)
   const active = useRef(-1)
   const unfold = useRef(0)
   const wantOpen = useRef(open)
   const told = useRef(-1)
+
+  // The page's previous and next buttons.
+  useImperativeHandle(
+    api,
+    () => ({
+      step: (by) => {
+        if (live.current.flat > 0) return
+        live.current.touched = performance.now()
+        live.current.byItself = false
+        motion.current.target = Math.round(motion.current.target) + by
+      },
+    }),
+    [],
+  )
 
   useEffect(() => {
     wantOpen.current = open
@@ -157,6 +184,7 @@ function Row({ sites, stage, inView, open, onActive, onOpen, onFlat }: RowProps)
       m.lastT = event.timeStamp
       m.toss = 0
       m.moved = 0
+      l.byItself = false
       l.touched = performance.now()
       element.setPointerCapture(event.pointerId)
       element.dataset.dragging = 'true'
@@ -200,15 +228,12 @@ function Row({ sites, stage, inView, open, onActive, onOpen, onFlat }: RowProps)
       const resting = event.timeStamp - m.lastT > 90
       m.target = Math.round(m.target + (resting ? 0 : m.toss * 0.22))
     }
+    // The arrow keys move the row. Opening a project is left to the buttons under the row, each of which says what it opens.
     const key = (event: KeyboardEvent) => {
       if (l.flat > 0) return
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault()
-        onOpen()
-        return
-      }
       if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return
       event.preventDefault()
+      l.byItself = false
       l.touched = performance.now()
       m.target = Math.round(m.target) + (event.key === 'ArrowRight' ? 1 : -1)
     }
@@ -216,6 +241,7 @@ function Row({ sites, stage, inView, open, onActive, onOpen, onFlat }: RowProps)
     const wheel = (event: WheelEvent) => {
       if (l.flat > 0 || Math.abs(event.deltaX) <= Math.abs(event.deltaY)) return
       event.preventDefault()
+      l.byItself = false
       l.touched = performance.now()
       m.target += event.deltaX * l.panelsPerPixel
       clearTimeout(settle)
@@ -246,7 +272,7 @@ function Row({ sites, stage, inView, open, onActive, onOpen, onFlat }: RowProps)
     }
   }, [stage, onOpen])
 
-  const narrowNow = useThree((state) => state.size.width < 760)
+  const narrowNow = useThree((state) => state.size.width <= 760)
 
   useFrame((state, delta) => {
     const m = motion.current
@@ -267,9 +293,11 @@ function Row({ sites, stage, inView, open, onActive, onOpen, onFlat }: RowProps)
       onFlat(flat)
     }
 
-    // Left alone, the row moves on by itself.
+    // Left alone, the row moves on by itself. Not while somebody is using the section with the keyboard or its buttons.
+    if (paused.current) l.touched = now
     if (!reducedMotion && inView && flat === 0 && !m.dragging && !l.hover && introAt.current !== null && now - l.touched > TURN) {
       l.touched = now
+      l.byItself = true
       m.target = Math.round(m.target) + 1
     }
 
@@ -340,8 +368,10 @@ function Row({ sites, stage, inView, open, onActive, onOpen, onFlat }: RowProps)
 
     const index = slots[((Math.round(m.current) % count) + count) % count]
     if (index !== active.current) {
+      // The very first report is the row arriving, not somebody moving it.
+      const first = active.current === -1
       active.current = index
-      onActive(index)
+      onActive(index, !first && !l.byItself)
     }
   })
 

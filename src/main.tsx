@@ -1,6 +1,7 @@
 import '@fontsource-variable/inter'
 import '@fontsource/anton'
 import './styles.css'
+import './case/view-transition.css'
 
 import { StrictMode } from 'react'
 import { createRoot, hydrateRoot } from 'react-dom/client'

@@ -9,7 +9,7 @@ export const BAR = 44
  * lays the live site over it, so both must use this one function.
  */
 export function openWindow(width: number, height: number) {
-  const narrow = width < 760
+  const narrow = width <= 760
   const top = (narrow ? 60 : 72) + 8 + BAR
   const bottom = narrow ? 16 : 26
   const side = narrow ? 12 : Math.max(24, width * 0.03)

@@ -8,7 +8,7 @@ import { useScrollFrame } from '../lib/useScrollFrame'
  * while the page scrolls on, and the next card comes up over it and leaves
  * its strip showing.
  *
- * It says "Skills." (with the orange full stop), and under it two blocks
+ * It says "Skills." (with the orange full stop) and one quiet line, and under them two blocks
  * step down across the page: an orange one from the left edge to the first
  * column line, and a white one from that line to the right edge. The blocks
  * draw themselves in as the card comes up (--run, 0..1 as it passes; it
@@ -37,6 +37,7 @@ export function SkillsCard({ count }: { count: string }) {
           {skills.title}
           <b>.</b>
         </p>
+        <p className="skills-sub">{skills.subline}</p>
         <p className="skills-steps">
           <span data-tone="accent">{skills.steps[0]}</span> <span data-tone="paper">{skills.steps[1]}</span>
         </p>

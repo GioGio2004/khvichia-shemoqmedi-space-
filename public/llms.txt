@@ -4,9 +4,16 @@
 
 ## This site
 
-- [Portfolio](https://khvichia.shemoqmedi.space/): one page with his skills and stack, the sites he has built, a few photos, and how to reach him
+- [Portfolio](https://khvichia.shemoqmedi.space/): the home page with his skills and stack, the sites he has built, a few photos, and how to reach him
 - [CV, English (PDF)](https://khvichia.shemoqmedi.space/cv/Giorgi-Khvichia-CV.pdf): experience, projects, education, awards and technical skills
 - [CV, Georgian (PDF)](https://khvichia.shemoqmedi.space/cv/Giorgi-Khvichia-CV-KA.pdf): the same CV in Georgian
+
+## Case studies
+
+- [Shemoqmedi, case study](https://khvichia.shemoqmedi.space/work/shemoqmedi): a platform for Georgia's web designers, developers and digital creators, with a developing awards community. Role: founder, product design, full-stack engineering
+- [Kencho Room, case study](https://khvichia.shemoqmedi.space/work/kencho-room): an interactive room for a custom-furniture brand. Role: creative developer, interactive engineering. Client project, delivered
+- [Kencho Group, case study](https://khvichia.shemoqmedi.space/work/kencho-group): the main website of a custom-furniture business. Role: full-stack and frontend implementation, end-to-end delivery. Client project, delivered
+- [Kalami, case study](https://khvichia.shemoqmedi.space/work/kalami): an educational platform shaped by real classroom needs. Role: creator, full-stack engineer, university lecturer. Active university pilot
 
 ## Work
 
