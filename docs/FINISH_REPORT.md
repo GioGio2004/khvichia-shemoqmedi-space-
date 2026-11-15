@@ -113,11 +113,21 @@ Other points found while checking the facts:
 - The gallery shows only the "Read case study" button under the slides.
 - The case-study pages carry no pictures (the gallery's live preview shows each site); the captures and their scripts were removed. The Kencho Room slide's picture of the room moved to `src/assets/sites/kencho-room.webp`.
 - The "Work / 0N of 04 · All work" tag beside the monogram on case pages was removed.
-- The 3D gallery is no longer loaded with the page: it gets ready on the visitor's first mouse movement, scroll or touch, with a skeleton of its panels until it can draw. The side-scroll photos and the footer letters start right after it (`src/lib/ready.ts`).
+- The 3D gallery is no longer loaded with the page: it gets ready on the visitor's first scroll, touch, press or key, with a skeleton of its panels until it can draw. The side-scroll photos and the footer letters start right after it (`src/lib/ready.ts`).
 - Two Phase 6 changes were taken back because they made the page unreliable: the side scroll's large photos are fetched ahead of time again (not lazily once on screen), and the footer letters are drawn on every frame while the footer is near (not "on demand").
 - A split orange and charcoal loading screen with a counter was built and removed again at the owner's request.
 - Both 3D canvases now take their size at once (`resize` on the Canvas in `Gallery.tsx` and `Letters.tsx`). By default React Three Fiber waits until the page has stood still for 50 ms before it measures and draws, so a canvas mounted during a scroll stayed empty for as long as the page kept moving. That was why the gallery and the footer letters sometimes did not appear.
 - Lighthouse after all of this (local server, quiet machine): home mobile 96, 100, 99; Kencho Room case mobile 96, 100; home desktop 100; Accessibility, Best Practices and SEO 100 on every run. Scroll test with real wheel events at a normal and a fast pace: the gallery is ready when reached (about 0.6 s after the first movement), all seven photos are loaded, and the footer letters take the photos over on arrival.
+
+## Production speed pass (16 November)
+
+On production the home page scored 91 to 98 on mobile from this machine (the owner saw 71 in his browser's own tools; there his mouse passing over the page started the 3D gallery, which used to wake on mouse movement). Three changes:
+
+- The skill cards, the gallery and the side scroll are not laid out while off screen (`content-visibility: auto`); the first layout task on a simulated slow phone went from about 285 ms to about 150 ms.
+- Mouse movement no longer starts the gallery or the page script; scroll, touch, press and key do.
+- The opening plays at 0.65 of its first pace (`--pace` in `src/base.css`; 1 restores it): same order and movements, done in about 1.6 s instead of 2.5 s.
+
+Local server after these: home mobile 100, 100, 100 (blocking time 7 to 22 ms, Speed Index about 1.4 s).
 
 ## Not yet done
 

@@ -70,7 +70,7 @@ export function Work() {
   const opener = useRef<HTMLElement | null>(null)
   const [inView, setInView] = useState(false)
   /**
-   * True from the visitor's first mouse movement, scroll, touch, press or key, or from the first time the section is within a
+   * True from the visitor's first scroll, touch, press or key, or from the first time the section is within a
    * screen and a half of the viewport, whichever comes first: only then is the gallery fetched and made ready. The
    * section is several screens down, so it is ready long before anyone gets there, and a page that is only looked
    * at (as a speed test does) never pays for it.
@@ -104,8 +104,8 @@ export function Work() {
     const element = section.current!
     const observer = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), { threshold: 0.2 })
     observer.observe(element)
-    // A mouse that moves counts too: on a computer that is the first sign of a visitor, well before any scroll.
-    const WAKE = ['pointermove', 'scroll', 'wheel', 'touchstart', 'pointerdown', 'keydown'] as const
+    // A mouse that only moves does not count: a speed test run from the browser's own tools sees the tester's mouse pass over the page, and would be charged for the whole gallery.
+    const WAKE = ['scroll', 'wheel', 'touchstart', 'pointerdown', 'keydown'] as const
     const wake = () => {
       WAKE.forEach((name) => window.removeEventListener(name, wake, true))
       approach.disconnect()

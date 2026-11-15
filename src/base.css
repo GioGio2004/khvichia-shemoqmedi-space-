@@ -42,6 +42,12 @@
   --menu-w: 136px;
   --menu-open: min(68vw, 940px);
 
+  /*
+   * How fast the opening of the home page plays: every duration and delay of it is multiplied by this. 1 is the
+   * pace it was first set at (about 2.5 s from start to finish); 0.65 finishes in about 1.6 s. The order and the
+   * movements stay the same. A page that looks complete sooner also scores better in speed tests.
+   */
+  --pace: 0.65;
   --ease: cubic-bezier(0.76, 0, 0.24, 1);
   --out: cubic-bezier(0.16, 1, 0.3, 1);
 
@@ -101,7 +107,7 @@ body {
   transition:
     color 0.35s ease,
     background-color 0.35s ease;
-  animation: pop 0.8s var(--out) 1.1s both;
+  animation: pop calc(0.8s * var(--pace)) var(--out) calc(1.1s * var(--pace)) both;
 }
 /* Over a dark section it turns light, like the menu tab. */
 /* The monogram is 40 pixels square (36 on phones); this makes it 44 for a finger without changing how it looks. */
@@ -129,7 +135,7 @@ body {
   --bg: var(--ink);
   color: var(--fg);
   background: var(--bg);
-  animation: drop 0.9s var(--out) 0.9s both;
+  animation: drop calc(0.9s * var(--pace)) var(--out) calc(0.9s * var(--pace)) both;
   border-bottom-left-radius: calc(var(--menu-h) / 2);
   transition:
     width 0.75s var(--ease),

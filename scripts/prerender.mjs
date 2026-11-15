@@ -115,7 +115,7 @@ function loadScriptsLater(html) {
   html = html.replace(entry, '')
   for (const [tag] of chunks) html = html.replace(tag, '')
   const urls = JSON.stringify([found[1], ...chunks.map(([, url]) => url)])
-  const loader = `<script>(()=>{let d=0;const go=()=>{if(d)return;d=1;${urls}.forEach((u,i)=>{const e=document.createElement(i?"link":"script");if(i){e.rel="modulepreload";e.href=u}else{e.type="module";e.src=u}e.crossOrigin="";document.head.append(e)})};["pointermove","pointerdown","keydown","touchstart","wheel"].forEach(n=>addEventListener(n,go,{once:true,passive:true,capture:true}));document.readyState=="complete"?go():addEventListener("load",go,{once:true})})()</script>`
+  const loader = `<script>(()=>{let d=0;const go=()=>{if(d)return;d=1;${urls}.forEach((u,i)=>{const e=document.createElement(i?"link":"script");if(i){e.rel="modulepreload";e.href=u}else{e.type="module";e.src=u}e.crossOrigin="";document.head.append(e)})};["pointerdown","keydown","touchstart","wheel"].forEach(n=>addEventListener(n,go,{once:true,passive:true,capture:true}));document.readyState=="complete"?go():addEventListener("load",go,{once:true})})()</script>`
   if (!html.includes('</body>')) throw new Error('No </body> to put the loader before.')
   return html.replace('</body>', () => `${loader}\n  </body>`)
 }

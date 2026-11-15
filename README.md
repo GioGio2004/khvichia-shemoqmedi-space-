@@ -64,7 +64,7 @@ the project builds itself on every push to `main`.
 - Every animation moves only position, size or opacity, so the graphics card
   draws it; nothing repaints the page frame after frame.
 - The heavy parts get ready one after another, never at page load: the 3D
-  gallery on the visitor's first mouse movement, scroll or touch
+  gallery on the visitor's first scroll, touch, press or key
   (`src/work/Work.tsx`; a skeleton of its panels stands in until it can draw),
   then the photos of the side scroll and the footer's letters
   (`src/lib/ready.ts`). Each also starts on its own when the visitor gets
