@@ -6,6 +6,8 @@
  * the two versions saying the same things.
  */
 
+import { stack } from '../src/content/stack.ts'
+
 const reach = (place) => [
   { text: place },
   { text: '+995 599 25 18 40', href: 'tel:+995599251840' },
@@ -17,6 +19,14 @@ const reach = (place) => [
 ]
 
 const TECH = 'Next.js, TypeScript, Convex, Clerk, MCP.'
+
+/**
+ * The technical skills are the portfolio's own list (src/content/stack.ts: Interface, Engine, Around it), so the CV
+ * and the site never drift apart: change a name there and both follow. `add` puts extra names at the end of a row;
+ * `skip` leaves a name out (MCP has its own row here, under AI).
+ */
+const tools = (group, { add = [], skip = [] } = {}) =>
+  `${[...stack[group].tools.map((tool) => tool.name).filter((name) => !skip.includes(name)), ...add].join(', ')}.`
 
 export const cv = {
   en: {
@@ -116,12 +126,10 @@ export const cv = {
     skills: {
       label: 'Technical skills',
       rows: [
-        ['Languages', 'TypeScript, JavaScript (ES6+), Python, C++, HTML5, CSS3.'],
-        ['Frontend', 'Next.js (App Router), React.js, Tailwind CSS, shadcn/ui; responsive and interactive UI architecture.'],
-        ['Backend and cloud', 'Node.js, Convex, Supabase, MongoDB Atlas, Clerk Authentication, RESTful APIs, Vercel.'],
+        ['Interface', tools(0)],
+        ['Engine', tools(1)],
+        ['Platform and tools', tools(2, { add: ['Lighthouse'], skip: ['MCP'] })],
         ['AI and protocols', 'Model Context Protocol (MCP), LLM API integration, Google AI Studio, prompt engineering, agentic workflows.'],
-        ['Networks and security', 'Linux (Kali), network diagnostics, Nmap, FTP protocols, web application security.'],
-        ['Engineering and prototyping', 'Git/GitHub, Figma, CAD/CAM digital fabrication, hardware prototyping, LightBurn, LaserGRBL.'],
       ],
     },
     languages: {
@@ -232,12 +240,10 @@ export const cv = {
     skills: {
       label: 'ტექნიკური უნარები',
       rows: [
-        ['პროგრამირების ენები', 'TypeScript, JavaScript (ES6+), Python, C++, HTML5, CSS3.'],
-        ['Frontend', 'Next.js (App Router), React.js, Tailwind CSS, shadcn/ui; ადაპტიური და ინტერაქტიული UI არქიტექტურა.'],
-        ['Backend და ღრუბლოვანი სისტემები', 'Node.js, Convex, Supabase, MongoDB Atlas, Clerk Authentication, RESTful APIs, Vercel.'],
+        ['ინტერფეისი', tools(0)],
+        ['ძრავა', tools(1)],
+        ['პლატფორმა და ხელსაწყოები', tools(2, { add: ['Lighthouse'], skip: ['MCP'] })],
         ['AI და პროტოკოლები', 'Model Context Protocol (MCP), LLM API ინტეგრაცია, Google AI Studio, Prompt Engineering, Agentic Workflows.'],
-        ['ქსელები და უსაფრთხოება', 'Linux (Kali), ქსელური დიაგნოსტიკა, Nmap, FTP პროტოკოლები, ვებ-აპლიკაციების უსაფრთხოება.'],
-        ['ინჟინერია და პროტოტიპირება', 'Git/GitHub, Figma, CAD/CAM ციფრული ფაბრიკაცია, აპარატურული პროტოტიპირება, LightBurn, LaserGRBL.'],
       ],
     },
     languages: {
