@@ -58,9 +58,11 @@ type RowProps = {
   onOpen: () => void
   /** Told as the middle panel opens and folds back: 0 = bent in the row, 1 = flat. */
   onFlat: (flat: number) => void
+  /** Told once, when every picture is on the graphics card and the drawing is prepared: the first frame will not stall. */
+  onReady?: () => void
 }
 
-function Row({ sites, stage, inView, open, initial, api, paused, onActive, onOpen, onFlat }: RowProps) {
+function Row({ sites, stage, inView, open, initial, api, paused, onActive, onOpen, onFlat, onReady }: RowProps) {
   // The row loops for ever, so a short list is repeated until it is longer than the screen.
   const slots = useMemo(() => {
     const list: number[] = []
@@ -124,6 +126,20 @@ function Row({ sites, stage, inView, open, initial, api, paused, onActive, onOpe
       loaded.forEach((texture) => texture.dispose())
     }
   }, [sites])
+
+  // Once every picture has arrived: they are sent to the graphics card and the drawing program is prepared now, while
+  // the opening screen is still up, instead of on the first frame the gallery is seen.
+  const gl = useThree((state) => state.gl)
+  const scene = useThree((state) => state.scene)
+  const camera = useThree((state) => state.camera)
+  const prepared = useRef(false)
+  useEffect(() => {
+    if (prepared.current || shots.filter(Boolean).length < sites.length) return
+    prepared.current = true
+    for (const texture of shots) if (texture) gl.initTexture(texture)
+    gl.compile(scene, camera)
+    onReady?.()
+  }, [shots, sites, gl, scene, camera, onReady])
 
   const meshes = useRef<(Mesh | null)[]>([])
   /** Positions are counted in panels: 0 is the first panel in the middle, 1 the second, and so on. */
@@ -406,6 +422,10 @@ export default function Gallery(props: RowProps) {
       camera={{ fov: 40, position: [0, 0, 10], near: 0.1, far: 60 }}
       dpr={[1, 2]}
       frameloop={props.inView ? 'always' : 'never'}
+      // Measured at once and never on scroll. By default the canvas waits until the page has stood still for 50 ms before it
+      // takes its size, and draws nothing until then: mounted while the visitor is scrolling (as it always is here), it
+      // would stay empty for as long as the page keeps moving.
+      resize={{ scroll: false, debounce: 0 }}
       gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
     >
       <Row {...props} />

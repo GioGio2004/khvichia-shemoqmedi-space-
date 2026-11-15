@@ -69,97 +69,97 @@ The ChatGPT brief covers content and structure. These are concrete visual and po
 - "Tested" means actually checked in a browser or a Playwright screenshot. Never claim visual verification that didn't happen.
 
 ### Phase 0: Inventory and baseline (no feature code)
-- [ ] Create the branch. Read `package.json`, the router type (App Router, Pages Router or Vite), the section components, design tokens, fonts, the gallery implementation, the Lenis setup, i18n (if any), assets and the CV file paths.
-- [ ] Confirm the gallery order (expected: Shemoqmedi → Kencho Room → Kencho Group → Kalami). Note: the screenshots show "01/04" with Shemoqmedi and Kencho Room only, so check the real data.
-- [ ] Baseline: run lint, typecheck and build, and record the results.
-- [ ] Add `scripts/qa-shots.ts` (Playwright). It screenshots home (hero, skills × 3 panels, gallery × each slide, photo carousel, GIORGI finale, menu overlay, contact overlay) at **1920, 1440, 1024, 768, 390, 375 and 320**, once normally and once with `reducedMotion: 'reduce'`. Output goes to `qa/baseline/` (gitignored). **Look at the screenshots** and list any defects you find beyond §2.
-- [ ] Write `docs/INVENTORY.md`: components to reuse, where each §2 finding lives in the code, missing assets, and open D-items.
+- [x] Create the branch. Read `package.json`, the router type (App Router, Pages Router or Vite), the section components, design tokens, fonts, the gallery implementation, the Lenis setup, i18n (if any), assets and the CV file paths.
+- [x] Confirm the gallery order (expected: Shemoqmedi → Kencho Room → Kencho Group → Kalami). Note: the screenshots show "01/04" with Shemoqmedi and Kencho Room only, so check the real data.
+- [x] Baseline: run lint, typecheck and build, and record the results.
+- [x] Add `scripts/qa-shots.ts` (Playwright). It screenshots home (hero, skills × 3 panels, gallery × each slide, photo carousel, GIORGI finale, menu overlay, contact overlay) at **1920, 1440, 1024, 768, 390, 375 and 320**, once normally and once with `reducedMotion: 'reduce'`. Output goes to `qa/baseline/` (gitignored). **Look at the screenshots** and list any defects you find beyond §2.
+- [x] Write `docs/INVENTORY.md`: components to reuse, where each §2 finding lives in the code, missing assets, and open D-items.
 - **Checkpoint:** commit `docs: inventory and baseline`.
 
 ### Phase 1: Polish fixes from the review (fast, highly visible)
-- [ ] **P1-1 Outline glitch (§2.1).** Build a *static* instance of the display font with overlaps removed, and use it only for outlined text:
+- [x] **P1-1 Outline glitch (§2.1).** Build a *static* instance of the display font with overlaps removed, and use it only for outlined text:
   `pip install fonttools skia-pathops brotli` →
   `fonttools varLib.instancer <Font[wght]>.ttf wght=<weight> --remove-overlaps -o Outline-Static.ttf` →
   `fonttools ttLib.woff2 compress Outline-Static.ttf`.
   Load it as a separate `@font-face` (e.g. `font-family: 'GK Outline'`) and apply it to every `text-stroke` element. If the font licence or the files make that impossible, fall back to an SVG path version of the name. Verify with a zoomed screenshot of the K and the v.
-- [ ] **P1-2 Kencho slide (§2.2).** Make every gallery slide use the same frame treatment (match Shemoqmedi: no grey panel, no heavy inner shadow). Fix this in the slide data or component, not with a one-off override.
-- [ ] **P1-3 Contrast (§2.4).** Raise the resting colour of inactive skill words, slashes and footers to at least 3:1 against the panel background (at least 4.5:1 for small text like "09 tools"). Keep the hierarchy, so the highlighted word still pops. Check all three panels at rest, while hovering and at the end of transitions.
-- [ ] **P1-4 Hero label (§2.7).** Stop the awkward wrap: use `white-space: nowrap` where it fits, or rebalance the line. Apply D2.
-- [ ] **P1-5 Skills as evidence (§2.5, needs D9).** Keep all three panels and their animation. Trim each list to tools that appear in at least one case study. Give each tool a quiet project reference on hover or focus (e.g. "GLSL · Kencho Room", "MCP · Kalami, Shemoqmedi studio") from a `usedIn` field in the content model (Phase 2). Replace the MCP slogan slide with an evidence line, e.g. `MCP — wired into Kalami's classroom tools and Shemoqmedi's studio.` Use the skills subline and footers from Appendix A §4.
-- [ ] **P1-6 Discipline bar (§2.9).** Turn each discipline into a real link to the most relevant case study (Web platforms → Shemoqmedi, 3D experiences → Kencho Room, AI tools → Kalami, 4th item per D1). If a mapping is unclear, leave that item unlinked rather than guessing.
-- [ ] **P1-7 Carousel title (§2.8).** Check the overlap at every breakpoint. Keep it if it's deliberate and legible; otherwise offset it.
+- [x] **P1-2 Kencho slide (§2.2).** Make every gallery slide use the same frame treatment (match Shemoqmedi: no grey panel, no heavy inner shadow). Fix this in the slide data or component, not with a one-off override.
+- [x] **P1-3 Contrast (§2.4).** Raise the resting colour of inactive skill words, slashes and footers to at least 3:1 against the panel background (at least 4.5:1 for small text like "09 tools"). Keep the hierarchy, so the highlighted word still pops. Check all three panels at rest, while hovering and at the end of transitions.
+- [x] **P1-4 Hero label (§2.7).** Stop the awkward wrap: use `white-space: nowrap` where it fits, or rebalance the line. Apply D2.
+- [ ] **P1-5 Skills as evidence (§2.5, needs D9).** Keep all three panels and their animation. Trim each list to tools that appear in at least one case study. Give each tool a quiet project reference on hover or focus (e.g. "GLSL · Kencho Room", "MCP · Kalami, Shemoqmedi studio") from a `usedIn` field in the content model (Phase 2). Replace the MCP slogan slide with an evidence line, e.g. `MCP — wired into Kalami's classroom tools and Shemoqmedi's studio.` Use the skills subline and footers from Appendix A §4. *(Done except the trim itself, which waits on D9.)*
+- [x] **P1-6 Discipline bar (§2.9).** Turn each discipline into a real link to the most relevant case study (Web platforms → Shemoqmedi, 3D experiences → Kencho Room, AI tools → Kalami, 4th item per D1). If a mapping is unclear, leave that item unlinked rather than guessing.
+- [x] **P1-7 Carousel title (§2.8).** Check the overlap at every breakpoint. Keep it if it's deliberate and legible; otherwise offset it.
 - **Checkpoint:** re-run qa-shots into `qa/phase1/`, compare against the baseline, commit `fix: visual polish from review`.
 
 ### Phase 2: Content model (P0)
-- [ ] Create one typed source of truth, e.g. `src/content/work.ts`, with fields: `slug, index, title, eyebrow, tagline, role, status, year?, stack[], overview, challenge, contributions[{title, body, media?}], engineeringNote, evidence{now, next?}, externalUrl?, previewUrl?, embeddable, media{hero, gallery[], og?}, next`.
-- [ ] Add `src/content/skills.ts` with a `usedIn: slug[]` field per tool (powers P1-5).
-- [ ] Add `src/content/profile.ts`: positioning, About copy, lecturer credential (D3), hackathon credential (D4) and availability (D2).
-- [ ] Fill everything from **Appendix A**, apply D-answers, and use `null` for unknowns. Respect every guardrail in Appendix A §5: 15 students is real and 100+ is only a target; jury members are confirmed vs invited (D7); award status is pending (D6).
-- [ ] If the site has i18n, add keys instead of hard-coded strings, and don't mix Georgian/English placeholders.
+- [x] Create one typed source of truth, e.g. `src/content/work.ts`, with fields: `slug, index, title, eyebrow, tagline, role, status, year?, stack[], overview, challenge, contributions[{title, body, media?}], engineeringNote, evidence{now, next?}, externalUrl?, previewUrl?, embeddable, media{hero, gallery[], og?}, next`.
+- [x] Add `src/content/skills.ts` with a `usedIn: slug[]` field per tool (powers P1-5).
+- [x] Add `src/content/profile.ts`: positioning, About copy, lecturer credential (D3), hackathon credential (D4) and availability (D2).
+- [x] Fill everything from **Appendix A**, apply D-answers, and use `null` for unknowns. Respect every guardrail in Appendix A §5: 15 students is real and 100+ is only a target; jury members are confirmed vs invited (D7); award status is pending (D6).
+- [x] If the site has i18n, add keys instead of hard-coded strings, and don't mix Georgian/English placeholders.
 - **Checkpoint:** commit `feat: content model for work, skills, profile`.
 
 ### Phase 3: Case-study routes (P0)
-- [ ] Add `/work/[slug]` (or the equivalent for the router), statically generated for the 4 slugs, with a 404 for anything else.
-- [ ] Use shared primitives with art direction per project (see Appendix A §3 and §7):
+- [x] Add `/work/[slug]` (or the equivalent for the router), statically generated for the 4 slugs, with a 404 for anything else.
+- [x] Use shared primitives with art direction per project (see Appendix A §3 and §7):
   slim header `GK / WORK / 0X—04 · All work · Menu` → large hero → `At a glance` strip (Role / Type / Stage / Year / Stack, each shown only if known) → Overview → Challenge → What I built (paired with real media) → Engineering notes → Status/evidence → `Visit project` and `Next project` → mini contact strip.
-- [ ] Give each project its own feel: **Shemoqmedi** editorial/community, **Kencho Room** atmospheric and media-led, **Kencho Group** client and brand story paired visually with Kencho Room ("two deliverables, one client"), **Kalami** UI screenshots, a role diagram and a feature grid.
-- [ ] **Real media:** use existing assets first. If missing, capture real screenshots of the live projects with Playwright (desktop 1440×900 @2x, mobile 390×844 @3x) and save them as optimised AVIF/WebP with explicit width and height. **Kalami: use only the D8 demo account. Never capture real student names, grades, emails or records.** No stock imagery.
-- [ ] Reading measure 60–75ch, body text never on busy imagery, generous whitespace, existing tokens only.
-- [ ] Make the next-project transition feel native to the current motion system.
-- [ ] Add per-page metadata: unique title, description, canonical URL and an OG image (generated with the framework's OG tooling if available, in the site's own type and colours).
+- [x] Give each project its own feel: **Shemoqmedi** editorial/community, **Kencho Room** atmospheric and media-led, **Kencho Group** client and brand story paired visually with Kencho Room ("two deliverables, one client"), **Kalami** UI screenshots, a role diagram and a feature grid.
+- [x] **Real media:** use existing assets first. If missing, capture real screenshots of the live projects with Playwright (desktop 1440×900 @2x, mobile 390×844 @3x) and save them as optimised AVIF/WebP with explicit width and height. **Kalami: use only the D8 demo account. Never capture real student names, grades, emails or records.** No stock imagery.
+- [x] Reading measure 60–75ch, body text never on busy imagery, generous whitespace, existing tokens only.
+- [x] Make the next-project transition feel native to the current motion system.
+- [x] Add per-page metadata: unique title, description, canonical URL and an OG image (generated with the framework's OG tooling if available, in the site's own type and colours).
 - **Checkpoint:** direct-load and refresh each route, run qa-shots on all 4 routes at all widths, commit `feat: case study pages`.
 
 ### Phase 4: Gallery entry points and accessibility (P0/P1)
-- [ ] Each slide gets visible, distinct actions: `Read case study` (internal route), `Explore live preview` (on-demand embed, only if `embeddable`) and `Visit live ↗` (new tab, `rel="noopener noreferrer"`). They must never trigger the same thing by accident, and dragging must never fire a click (use a movement threshold).
-- [ ] Add a visible index (`01 / 04`) plus previous/next **buttons**. Keep drag and swipe. When the gallery has focus, ←/→ move it. Add `aria-roledescription="carousel"`, a labelled region and a live region announcing the current slide.
-- [ ] Live preview modal: mount the iframe only on click, show a loading state, and after a timeout of about 8 s show a fallback with `Open in new tab`. Give the iframe a descriptive `title`, a `sandbox` with the minimum permissions needed, and `loading="lazy"`. Escape closes it, focus is trapped while open and restored on close, and background scroll (Lenis) stops while it's open.
-- [ ] Never mount several external apps on page load.
-- [ ] Back/forward and returning from a case study restore the active slide (via the URL `?work=slug` or sessionStorage) and the scroll position.
+- [x] Each slide gets visible, distinct actions: `Read case study` (internal route), `Explore live preview` (on-demand embed, only if `embeddable`) and `Visit live ↗` (new tab, `rel="noopener noreferrer"`). They must never trigger the same thing by accident, and dragging must never fire a click (use a movement threshold).
+- [x] Add a visible index (`01 / 04`) plus previous/next **buttons**. Keep drag and swipe. When the gallery has focus, ←/→ move it. Add `aria-roledescription="carousel"`, a labelled region and a live region announcing the current slide.
+- [x] Live preview modal: mount the iframe only on click, show a loading state, and after a timeout of about 8 s show a fallback with `Open in new tab`. Give the iframe a descriptive `title`, a `sandbox` with the minimum permissions needed, and `loading="lazy"`. Escape closes it, focus is trapped while open and restored on close, and background scroll (Lenis) stops while it's open.
+- [x] Never mount several external apps on page load.
+- [x] Back/forward and returning from a case study restore the active slide (via the URL `?work=slug` or sessionStorage) and the scroll position.
 - **Checkpoint:** keyboard-only walkthrough (Tab, Enter, Space, Esc, arrows) documented in the report, commit `feat(a11y): gallery entry points`.
 
 ### Phase 5: About, credentials and recruiter path (P0)
-- [ ] Add the About passage (Appendix A §4) in an existing surface (menu overlay or a light section), without breaking the home rhythm. Include the lecturer credential (D3) and the hackathon/GITEX AI credential (D4) as restrained micro-labels, not corporate cards.
-- [ ] Photo frames: add the real one-line captions from D12, e.g. the Berlin frame becomes evidence for D4. Bery stays as the comic beat.
-- [ ] Contact overlay: add the intro paragraph (fixes §2.6), plus three clear actions: `Email me` / `Download CV` / `Explore work`. Don't overwrite any existing contact detail.
-- [ ] Recruiter path: put a persistent, low-key `CV` and `Email` within one action from every page (e.g. in the menu header and the case-study header). Check that both CVs (EN and Georgian) download with correct filenames and MIME types.
-- [ ] Footer: make sure `Back to top`, the copyright and an obvious way to open Contact are all present.
+- [x] Add the About passage (Appendix A §4) in an existing surface (menu overlay or a light section), without breaking the home rhythm. Include the lecturer credential (D3) and the hackathon/GITEX AI credential (D4) as restrained micro-labels, not corporate cards.
+- [ ] Photo frames: add the real one-line captions from D12, e.g. the Berlin frame becomes evidence for D4. Bery stays as the comic beat. *(Waits on D12.)*
+- [x] Contact overlay: add the intro paragraph (fixes §2.6), plus three clear actions: `Email me` / `Download CV` / `Explore work`. Don't overwrite any existing contact detail.
+- [x] Recruiter path: put a persistent, low-key `CV` and `Email` within one action from every page (e.g. in the menu header and the case-study header). Check that both CVs (EN and Georgian) download with correct filenames and MIME types.
+- [x] Footer: make sure `Back to top`, the copyright and an obvious way to open Contact are all present.
 - **Checkpoint:** commit `feat: about, credentials, recruiter path`.
 
 ### Phase 6: Motion, performance and reduced motion (P1)
-- [ ] `prefers-reduced-motion: reduce`:
+- [x] `prefers-reduced-motion: reduce`:
   - disable Lenis smooth scroll and scroll-jacking/pinning
   - replace camera moves and parallax with fades or static states
   - stop continuously moving type
   - the GIORGI photo reveal becomes a static final state
   
   Every bit of content must stay reachable.
-- [ ] Three/R3F hygiene:
+- [x] Three/R3F hygiene:
   - pause rendering when the canvas is off-screen (IntersectionObserver → `frameloop="demand"` or stop the RAF)
   - dispose geometries, materials and textures on unmount and on route change
   - avoid a second WebGL context when navigating to a case study and back
   - check memory stays flat after 5 round trips
-- [ ] Lazy-load media below the fold, reserve dimensions (CLS ≈ 0), dynamically import heavy modules, and keep the grain a static tiled texture (not an animated full-screen canvas) unless it's already cheap.
-- [ ] Measure with a clean profile, 3 runs each for home and one case study, mobile and desktop. Record LCP, CLS, INP/TBT and Lighthouse ranges in the report. Don't chase 100 at the cost of the experience.
+- [x] Lazy-load media below the fold, reserve dimensions (CLS ≈ 0), dynamically import heavy modules, and keep the grain a static tiled texture (not an animated full-screen canvas) unless it's already cheap.
+- [x] Measure with a clean profile, 3 runs each for home and one case study, mobile and desktop. Record LCP, CLS, INP/TBT and Lighthouse ranges in the report. Don't chase 100 at the cost of the experience.
 - **Checkpoint:** commit `perf: motion and webgl hygiene`.
 
 ### Phase 7: Responsive and accessibility QA (P1)
-- [ ] Run qa-shots into `qa/final/` for every home section and all 4 case studies at all 7 widths, with motion on and off. **Review every image** and fix clipping, horizontal overflow, collisions, unreadable text and touch-target size (at least 44 px).
-- [ ] Add `@axe-core/playwright` checks on home, the menu overlay, the contact overlay and each case study. Fix all serious and critical issues.
-- [ ] Check visible focus rings everywhere (in the orange token, at least 3:1 against their background), a tab order that matches the visual order, landmarks, a single h1 per page, alt text, and `lang` attributes.
-- [ ] Check every link: internal, external projects, mailto, tel, GitHub, LinkedIn, both CVs and the language links.
-- [ ] Zero console errors, hydration warnings or missing-key warnings.
+- [ ] Run qa-shots into `qa/final/` for every home section and all 4 case studies at all 7 widths, with motion on and off. **Review every image** and fix clipping, horizontal overflow, collisions, unreadable text and touch-target size (at least 44 px). *(Started, stopped by the owner as too slow; replaced by spot checks. See FINISH_REPORT.md.)*
+- [x] Add `@axe-core/playwright` checks on home, the menu overlay, the contact overlay and each case study. Fix all serious and critical issues.
+- [ ] Check visible focus rings everywhere (in the orange token, at least 3:1 against their background), a tab order that matches the visual order, landmarks, a single h1 per page, alt text, and `lang` attributes. *(Partly: axe, landmarks, h1 and lang checked; a full keyboard walk was not redone after the last changes.)*
+- [x] Check every link: internal, external projects, mailto, tel, GitHub, LinkedIn, both CVs and the language links.
+- [x] Zero console errors, hydration warnings or missing-key warnings.
 - **Checkpoint:** commit `a11y: responsive and accessibility QA`.
 
 ### Phase 8: Metadata, SEO and submission kit (P2)
-- [ ] Sitemap, robots, canonical URLs, favicon set, OG images for home and each project, and structured data (`Person` + `CreativeWork` per project, only with verified fields).
-- [ ] Create `docs/SUBMISSION_KIT.md` (no submitting): a one-paragraph site description, the tech list, credits, 3–4 hero stills at 1600×1200 and a list of best-moment clips to record. Mark it ready only after Phases 1–7 pass.
+- [x] Sitemap, robots, canonical URLs, favicon set, OG images for home and each project, and structured data (`Person` + `CreativeWork` per project, only with verified fields).
+- [x] Create `docs/SUBMISSION_KIT.md` (no submitting): a one-paragraph site description, the tech list, credits, 3–4 hero stills at 1600×1200 and a list of best-moment clips to record. Mark it ready only after Phases 1–7 pass.
 
 ### Phase 9: Final report (in chat and in `docs/FINISH_REPORT.md`)
-- [ ] Changed files and why, grouped by phase.
-- [ ] P0/P1/P2 status, with the §2 findings marked fixed or not fixed.
-- [ ] Lint, typecheck, build and test results stated truthfully, plus the performance ranges.
-- [ ] Every remaining `TODO(owner)` and D-item still open.
-- [ ] Never call the site live unless a deployment was actually done and verified (and only as a preview, per D13).
+- [x] Changed files and why, grouped by phase.
+- [x] P0/P1/P2 status, with the §2 findings marked fixed or not fixed.
+- [x] Lint, typecheck, build and test results stated truthfully, plus the performance ranges.
+- [x] Every remaining `TODO(owner)` and D-item still open.
+- [x] Never call the site live unless a deployment was actually done and verified (and only as a preview, per D13).
 
 ---
 

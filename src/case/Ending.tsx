@@ -1,6 +1,6 @@
 import { contact, cv } from '../content/contact'
 import { hero } from '../content/hero'
-import type { Work } from '../content/work'
+import type { Work } from '../content/cases'
 import { two } from './fit'
 import { Arrow, Title } from './parts'
 

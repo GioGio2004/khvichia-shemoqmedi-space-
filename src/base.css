@@ -1,0 +1,924 @@
+/*
+ * The styles every page shares: the palette and the other tokens, the
+ * outline font, the page itself, the focus ring, the monogram, the menu tab
+ * with its About and Contact sheets, the movements the pages have in common,
+ * and the phone and reduced-motion rules for those parts.
+ *
+ * The home page adds home.css; the case studies add case/case.css. Keeping
+ * the home page's own rules out of this file means a case study does not
+ * carry them inside its HTML (scripts/prerender.mjs puts each page's
+ * stylesheets inside the page).
+ */
+
+@import 'tailwindcss';
+
+:root {
+  /*
+   * The palette, used 60 / 30 / 10:
+   *   paper   the white the opening screen is made of
+   *   ink     charcoal: type, the silhouette, the dark sections
+   *   accent  orange: the block behind the silhouette, the project cards
+   */
+  --paper: #ffffff;
+  --ink: #1c1c1c;
+  --accent: #ff4d00;
+  --tab: #dedede;
+  /* The grid's hairlines. */
+  --hair: rgb(28 28 28 / 0.06);
+  --mono: ui-monospace, 'SF Mono', 'Cascadia Mono', 'Segoe UI Mono', Menlo, Consolas, monospace;
+  /* A fine dark grain, laid over flat colour so it reads as print. */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.3 -0.38'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* The same grain, ready to lay straight onto a surface as a second background: a pale one for charcoal, a dark one for orange. White stays plain. */
+  --grain-pale: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.17 -0.05'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --grain-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.26 -0.076'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --mute: #6f6f6f;
+
+  /* The grid: four columns between two page margins. */
+  --edge: clamp(20px, 3vw, 44px);
+  --gutter: clamp(12px, 1.4vw, 20px);
+
+  /* The menu tab: its height, its width while closed, its width while open. */
+  --menu-h: 72px;
+  --menu-w: 136px;
+  --menu-open: min(68vw, 940px);
+
+  --ease: cubic-bezier(0.76, 0, 0.24, 1);
+  --out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  font-family: 'Inter Variable', Inter, system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/*
+ * Inter at weight 600 with every letter drawn as one shape, for outlined text only. In the normal Inter file the K
+ * and the v are made of overlapping strokes, and -webkit-text-stroke outlines each stroke, which shows as notches
+ * inside the letters. Made by scripts/outline-font.py; basic Latin only.
+ */
+@font-face {
+  font-family: 'GK Outline';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./assets/fonts/inter-latin-600-outline.woff2') format('woff2');
+}
+
+html {
+  scrollbar-width: none;
+}
+html::-webkit-scrollbar {
+  display: none;
+}
+
+body {
+  min-height: 100svh;
+  background: var(--ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* ---------- Monogram, top left ---------- */
+
+.mark {
+  position: fixed;
+  top: calc((var(--menu-h) - 40px) / 2);
+  left: var(--edge);
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  color: var(--paper);
+  background: var(--ink);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  transition:
+    color 0.35s ease,
+    background-color 0.35s ease;
+  animation: pop 0.8s var(--out) 1.1s both;
+}
+/* Over a dark section it turns light, like the menu tab. */
+/* The monogram is 40 pixels square (36 on phones); this makes it 44 for a finger without changing how it looks. */
+.mark::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+}
+.mark[data-tone='light'] {
+  color: var(--ink);
+  background: var(--tab);
+}
+
+/* ---------- Menu tab, top right ---------- */
+
+.menu {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 50;
+  width: var(--menu-w);
+  height: var(--menu-h);
+  overflow: hidden;
+  --fg: var(--paper);
+  --bg: var(--ink);
+  color: var(--fg);
+  background: var(--bg);
+  animation: drop 0.9s var(--out) 0.9s both;
+  border-bottom-left-radius: calc(var(--menu-h) / 2);
+  transition:
+    width 0.75s var(--ease),
+    height 0.75s var(--ease),
+    border-radius 0.75s var(--ease),
+    color 0.35s ease,
+    background-color 0.35s ease;
+}
+/* Over a dark section the tab turns light. */
+.menu[data-tone='light'] {
+  --fg: var(--ink);
+  --bg: var(--tab);
+}
+.menu[data-open='true'] {
+  width: var(--menu-open);
+}
+
+.menu-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: var(--menu-w);
+  height: var(--menu-h);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  cursor: pointer;
+}
+.menu-toggle:focus-visible {
+  outline-offset: -8px;
+}
+
+/* "Menu" and "Close" sit one above the other; opening slides the second one into view. */
+.menu-word {
+  display: block;
+  height: 34px;
+  overflow: hidden;
+}
+.menu-word > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  transition: transform 0.6s var(--ease);
+}
+/* "Close" is a small pill with a cross, so it does not read as one more section. */
+.menu-close {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 13px 0 15px;
+  border: 1px solid color-mix(in srgb, var(--fg) 22%, transparent);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition:
+    color 0.25s ease,
+    background-color 0.25s ease,
+    border-color 0.25s ease;
+}
+.menu-close svg {
+  width: 9px;
+  height: 9px;
+}
+.menu-toggle:hover .menu-close,
+.menu-toggle:focus-visible .menu-close {
+  color: var(--bg);
+  background: var(--fg);
+  border-color: var(--fg);
+}
+.menu[data-open='true'] .menu-word > span {
+  transform: translateY(-100%);
+}
+
+/* The links keep their final place the whole time; the growing tab uncovers them. */
+.menu-links {
+  position: absolute;
+  top: 0;
+  right: var(--menu-w);
+  width: calc(var(--menu-open) - var(--menu-w));
+  height: var(--menu-h);
+  padding-left: calc(var(--menu-h) / 2 + 12px);
+  visibility: hidden;
+  transition: visibility 0s 0.75s;
+}
+.menu[data-open='true'] .menu-links {
+  visibility: visible;
+  transition-delay: 0s;
+}
+.menu-links ul {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  padding-right: 20px;
+}
+.menu-links li {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 0.25s ease,
+    transform 0.4s var(--ease);
+}
+.menu[data-open='true'] .menu-links li {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.5s ease calc(0.3s + var(--i) * 0.06s),
+    transform 0.7s var(--out) calc(0.3s + var(--i) * 0.06s);
+}
+.menu-link {
+  position: relative;
+  display: block;
+  padding: 10px 2px;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  cursor: pointer;
+}
+/* A small orange dot appears to the left of the section being pointed at, and stays beside Contact while its panel is open. */
+.menu-link::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -12px;
+  width: 5px;
+  height: 5px;
+  margin-top: -2px;
+  background: var(--accent);
+  border-radius: 50%;
+  transform: scale(0);
+  transition: transform 0.35s var(--out);
+}
+.menu-link:hover::before,
+.menu-link:focus-visible::before,
+.menu-link[data-on='true']::before {
+  transform: scale(1);
+}
+
+/* The orange ring does not stand out enough on the light tab; there it is drawn in charcoal. */
+.menu[data-tone='light']:not([data-sheet]) .menu-toggle:focus-visible,
+.menu[data-tone='light']:not([data-sheet]) .menu-links :focus-visible {
+  outline-color: var(--ink);
+}
+
+/* At the end of the list, set apart and quieter: his CV and his email, one step away on every page. */
+.menu-quick {
+  display: flex;
+  gap: 18px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.menu-quick a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  opacity: 0.72;
+  transition: opacity 0.3s ease;
+}
+.menu-quick a:hover,
+.menu-quick a:focus-visible {
+  opacity: 1;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/*
+ * About and Contact: the bar comes all the way down and covers the screen
+ * as a sheet, whatever the bar's colour was.
+ *
+ * Contact is always charcoal, with the same grain as the page's other black
+ * surfaces. White is its main colour; orange is kept for the name's outline,
+ * the icons and the mark on the CV button. About is always white, with
+ * charcoal type and orange only for the full stop and the small arrows.
+ */
+.menu[data-sheet] {
+  width: 100vw;
+  height: 100svh;
+  border-bottom-left-radius: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.menu[data-sheet='contact'] {
+  --fg: var(--paper);
+  --bg: var(--ink);
+  background-image: var(--grain-pale);
+}
+.menu[data-sheet='about'] {
+  --fg: var(--ink);
+  --bg: var(--paper);
+}
+/*
+ * The sheet can scroll on a screen too small for it, but it never shows a scrollbar: while the bar is still growing
+ * or folding, its content is taller than it for a moment, and a bar would flash at the edge.
+ */
+.menu {
+  scrollbar-width: none;
+}
+.menu::-webkit-scrollbar {
+  display: none;
+}
+/* Like the links, a sheet's content keeps its final place the whole time; the growing bar uncovers it. */
+.menu-sheet {
+  position: absolute;
+  top: var(--menu-h);
+  right: 0;
+  width: 100vw;
+  min-height: calc(100svh - var(--menu-h));
+  padding: clamp(8px, 5svh, 56px) var(--edge) clamp(26px, 6.5svh, 64px);
+  visibility: hidden;
+  transition: visibility 0s 0.75s;
+}
+/* Until the menu is opened for the first time the browser does not lay the sheets out at all (see Menu.tsx). */
+.menu:not([data-woken]) .menu-sheet {
+  content-visibility: hidden;
+}
+/* A sheet takes the focus when something else on the page asked for it; it is not a control, so it shows no ring. */
+.menu-sheet:focus {
+  outline: none;
+}
+.menu[data-sheet='contact'] .menu-contact,
+.menu[data-sheet='about'] .menu-about {
+  visibility: visible;
+  transition-delay: 0s;
+}
+/* Contact, top to bottom: the name, a few words, the ways to reach him. They share the height evenly. */
+.menu-contact {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: clamp(20px, 4.5svh, 64px);
+}
+/* His name, hollow: only its outline, in orange, as wide as the screen allows. */
+.menu-name {
+  margin-left: -0.04em;
+  font-family: 'GK Outline', 'Inter Variable', Inter, system-ui, sans-serif;
+  font-size: min(14.3vw, 40svh);
+  font-weight: 600;
+  line-height: 0.98;
+  letter-spacing: -0.055em;
+  white-space: nowrap;
+  color: transparent;
+  -webkit-text-stroke: 2px var(--accent);
+}
+/* Under the name: the ways to reach him on the left, the CV button on the right, on one baseline. */
+.menu-reach {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 32px clamp(32px, 6vw, 96px);
+}
+.menu-reach ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, max-content));
+  gap: clamp(16px, 3svh, 26px) clamp(32px, 6vw, 88px);
+}
+/* A few words between the name and the addresses, and two plain links. */
+.menu-intro {
+  --i: 0;
+  max-width: 46rem;
+}
+.menu-intro > p:first-child {
+  font-size: clamp(17px, 1.5vw, 24px);
+  font-weight: 500;
+  line-height: 1.32;
+  letter-spacing: -0.02em;
+  color: rgb(255 255 255 / 0.88);
+  text-wrap: pretty;
+}
+.menu-intro .menu-actions {
+  margin-top: clamp(4px, 1.2svh, 12px);
+}
+/* Plain text links with a small orange arrow, used on both sheets. Tall enough for a finger. */
+.menu-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 28px;
+}
+.menu-actions a {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.menu-actions svg {
+  width: 12px;
+  height: 12px;
+  color: var(--accent);
+  transition: transform 0.35s var(--out);
+}
+.menu-actions a:hover,
+.menu-actions a:focus-visible {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+.menu-actions a:hover svg,
+.menu-actions a:focus-visible svg {
+  transform: translateX(4px);
+}
+
+/*
+ * About, on the page's four columns: a small line of what he is, one large
+ * sentence, then the paragraph on the left and what stands behind it on the
+ * right, and a last row with three short lines and the links.
+ */
+.menu-about {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: var(--gutter);
+  row-gap: clamp(18px, 3.6svh, 44px);
+  align-content: space-between;
+}
+.menu-kicker,
+.menu-proof,
+.menu-creds small {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+.menu-kicker {
+  grid-column: 1 / -1;
+}
+.menu-headline {
+  --i: 0;
+  grid-column: 1 / 4;
+  margin-left: -0.04em;
+  font-size: clamp(34px, min(5.2vw, 10.5svh), 96px);
+  font-weight: 600;
+  line-height: 0.98;
+  letter-spacing: -0.055em;
+  text-wrap: balance;
+}
+.menu-headline b {
+  font-weight: inherit;
+  color: var(--accent);
+}
+.menu-about-body {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 28px var(--gutter);
+  align-items: start;
+}
+.menu-about-text {
+  --i: 1;
+  grid-column: 1 / 3;
+  max-width: 36em;
+  padding-right: var(--gutter);
+  font-size: clamp(15px, 1.2vw, 19px);
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  color: #262626;
+  text-wrap: pretty;
+}
+/* What stands behind it: four short entries under hairlines, never as cards. */
+.menu-creds {
+  grid-column: 3 / 5;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(14px, 2.6svh, 28px) var(--gutter);
+}
+.menu-creds li {
+  --i: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 11px;
+  border-top: 1px solid rgb(28 28 28 / 0.16);
+}
+.menu-creds strong {
+  margin-top: 3px;
+  font-size: clamp(15px, 1.15vw, 18px);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+.menu-creds span {
+  font-size: 13px;
+  line-height: 1.4;
+  color: #5c5c5c;
+}
+.menu-about-foot {
+  --i: 3;
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 32px;
+  padding-top: 10px;
+  border-top: 1px solid rgb(28 28 28 / 0.16);
+}
+.menu-proof {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 28px;
+}
+
+/* Everything on a sheet comes up one after another as it opens. */
+.menu-name,
+.menu-intro,
+.menu-reach li,
+.menu-cv,
+.menu-kicker,
+.menu-headline,
+.menu-about-text,
+.menu-creds li,
+.menu-about-foot {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.25s ease,
+    transform 0.4s var(--ease);
+}
+.menu[data-sheet='contact'] :is(.menu-name, .menu-intro, .menu-reach li, .menu-cv),
+.menu[data-sheet='about'] :is(.menu-kicker, .menu-headline, .menu-about-text, .menu-creds li, .menu-about-foot) {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.5s ease calc(0.42s + var(--i, -1) * 0.06s),
+    transform 0.7s var(--out) calc(0.42s + var(--i, -1) * 0.06s);
+}
+/* One way to reach him: an orange icon in a hairline square, a small label, and the address in white. */
+.menu-reach li a {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.menu-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  color: var(--accent);
+  border: 1px solid rgb(255 255 255 / 0.16);
+  transition:
+    border-color 0.3s ease,
+    transform 0.35s var(--out);
+}
+.menu-icon svg {
+  width: 21px;
+  height: 21px;
+}
+/* The crow's shape, filled with the icon's colour. */
+.menu-crow {
+  width: 30px;
+  height: 30px;
+  background: currentColor;
+  mask: center / contain no-repeat;
+  -webkit-mask: center / contain no-repeat;
+}
+.menu-way {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  font-size: clamp(16px, 1.25vw, 21px);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+.menu-way small {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.5);
+}
+.menu-reach li a:hover .menu-icon,
+.menu-reach li a:focus-visible .menu-icon {
+  border-color: var(--accent);
+  transform: translateY(-3px);
+}
+.menu-reach li a:hover .menu-way > span,
+.menu-reach li a:focus-visible .menu-way > span {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+/*
+ * The CV button: a white slab with the words in charcoal and an orange
+ * square that carries the arrow. Pointing at it turns the slab orange and
+ * the square charcoal, and the arrow dips.
+ */
+.menu-cv-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(28px, 4vw, 72px);
+  height: 84px;
+  padding: 0 12px 0 30px;
+  color: var(--ink);
+  background: var(--paper);
+  font-size: clamp(19px, 1.5vw, 25px);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  white-space: nowrap;
+  transition: background-color 0.35s ease;
+}
+.menu-cv-mark {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  color: var(--ink);
+  background: var(--grain-dark) var(--accent);
+  transition:
+    color 0.35s ease,
+    background-color 0.35s ease;
+}
+.menu-cv-mark svg {
+  width: 24px;
+  height: 24px;
+  transition: transform 0.45s var(--out);
+}
+.menu-cv-main:hover,
+.menu-cv-main:focus-visible {
+  background: var(--accent);
+}
+.menu-cv-main:hover .menu-cv-mark,
+.menu-cv-main:focus-visible .menu-cv-mark {
+  color: var(--paper);
+  background: var(--ink);
+}
+.menu-cv-main:hover svg,
+.menu-cv-main:focus-visible svg {
+  transform: translateY(4px);
+}
+/* The other language, as a quiet line under the button. */
+.menu-cv-other {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgb(255 255 255 / 0.6);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  transition: color 0.3s ease;
+}
+.menu-cv-other:hover,
+.menu-cv-other:focus-visible {
+  color: var(--paper);
+}
+
+
+/* ---------- Movements used on every page ---------- */
+
+@keyframes rise {
+  from {
+    transform: translateY(110%);
+  }
+}
+/* The orange block grows out of the strip. */
+@keyframes grow {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes settle {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+/* The menu tab comes down from above the screen. */
+@keyframes drop {
+  from {
+    transform: translateY(-100%);
+  }
+}
+@keyframes pop {
+  from {
+    transform: scale(0);
+  }
+}
+@keyframes dot {
+  from {
+    transform: scale(0);
+  }
+}
+/* The hairlines draw themselves from the top. */
+@keyframes draw {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+/* ---------- Tablets and small laptops: the two sheets get simpler columns ---------- */
+
+@media (min-width: 761px) and (max-width: 1000px) {
+  /* The opened bar holds four words and two small links: here it needs nearly the whole width. */
+  :root {
+    --menu-open: 94vw;
+  }
+  /* The CV button drops under the addresses, so no address has to break in the middle of a word. */
+  .menu-reach {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .menu-cv {
+    max-width: 22rem;
+  }
+  .menu-headline {
+    grid-column: 1 / -1;
+  }
+  .menu-about-text,
+  .menu-creds {
+    grid-column: 1 / -1;
+  }
+  .menu-about-text {
+    max-width: 40em;
+  }
+  .menu-creds {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* ---------- Phones and narrow windows ---------- */
+
+@media (max-width: 760px) {
+  :root {
+    --menu-h: 60px;
+    --menu-w: 108px;
+    --menu-open: 100vw;
+    --menu-row: 58px;
+  }
+
+  /* The list, and under it one short row for the two quiet links. */
+  .menu[data-open='true'] {
+    height: calc(var(--menu-h) + var(--count) * var(--menu-row) + 44px + 20px);
+  }
+  /* With a sheet down the list closes up, so the sheet starts higher on a small screen. */
+  .menu[data-sheet] {
+    --menu-row: 42px;
+  }
+  .menu-links {
+    top: var(--menu-h);
+    right: 0;
+    width: 100vw;
+    height: auto;
+    padding: 4px var(--edge) 0;
+  }
+  .menu-links ul {
+    display: block;
+    padding: 0;
+  }
+  .menu-link {
+    padding: 0;
+    font-size: 34px;
+    font-weight: 600;
+    line-height: var(--menu-row);
+    letter-spacing: -0.04em;
+    transition:
+      font-size 0.5s var(--ease),
+      line-height 0.5s var(--ease);
+  }
+  .menu[data-sheet] .menu-link {
+    min-height: 44px;
+    font-size: 24px;
+  }
+  .menu-quick {
+    gap: 24px;
+    height: 44px;
+    align-items: center;
+    font-size: 12px;
+  }
+  .menu-link::before {
+    display: none;
+  }
+  .menu-link[data-on='true'] {
+    color: var(--accent);
+  }
+  .menu[data-sheet] {
+    height: 100svh;
+  }
+  .menu-sheet {
+    top: calc(var(--menu-h) + var(--count) * var(--menu-row) + 44px + 8px);
+    display: block;
+    min-height: 0;
+    padding: 10px var(--edge) 30px;
+    transition:
+      visibility 0s 0.75s,
+      top 0.5s var(--ease);
+  }
+  .menu-intro {
+    margin-top: 16px;
+  }
+  .menu-intro > p:first-child {
+    font-size: 16px;
+  }
+  /* About in one column: the sentence, the paragraph, the four entries two by two, the links. */
+  .menu-kicker {
+    margin-top: 6px;
+  }
+  .menu-headline {
+    margin-top: 12px;
+    font-size: clamp(30px, 10.4vw, 46px);
+    line-height: 1;
+  }
+  .menu-about-body {
+    display: block;
+    margin-top: 18px;
+  }
+  .menu-about-text {
+    max-width: none;
+    padding-right: 0;
+    font-size: 15px;
+  }
+  .menu-creds {
+    margin-top: 22px;
+    gap: 16px var(--gutter);
+  }
+  .menu-about-foot {
+    display: block;
+    margin-top: 22px;
+  }
+  .menu-proof {
+    display: block;
+  }
+  .menu-about-foot .menu-actions {
+    margin-top: 6px;
+  }
+  .menu-name {
+    font-size: 13vw;
+    -webkit-text-stroke-width: 1.4px;
+  }
+  .menu-reach {
+    display: block;
+    margin-top: 22px;
+  }
+  .menu-reach ul {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 13px;
+  }
+  .menu-icon {
+    width: 44px;
+    height: 44px;
+  }
+  .menu-way {
+    font-size: 16px;
+  }
+  .menu-cv {
+    margin-top: 24px;
+  }
+  .menu-cv-main {
+    height: 68px;
+    padding: 0 9px 0 22px;
+    font-size: 19px;
+  }
+  .menu-cv-mark {
+    width: 50px;
+    height: 50px;
+  }
+
+  .mark {
+    top: calc((var(--menu-h) - 36px) / 2);
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+  }
+}

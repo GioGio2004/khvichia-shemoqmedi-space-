@@ -1,4 +1,4 @@
-import { work } from '../content/work'
+import { work } from '../content/cases'
 import { two } from './fit'
 import { Arrow, Title } from './parts'
 

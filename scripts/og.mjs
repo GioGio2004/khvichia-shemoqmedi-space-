@@ -8,9 +8,9 @@
  *
  * Each picture is a small page in the site's own type and colours, drawn in
  * a real browser and photographed: Inter, the charcoal and the orange and
- * their grain read straight from src/styles.css, the name set large and
+ * their grain read straight from src/base.css, the name set large and
  * tight with the orange full stop, a small label above it and an orange band
- * along the bottom. The words come from src/content (work.ts, hero.ts), so
+ * along the bottom. The words come from src/content (cases.ts, hero.ts), so
  * the pictures never say anything the pages do not. Run it again whenever a
  * project's name, eyebrow or subtitle changes; the files are kept in the
  * repository.
@@ -28,16 +28,16 @@ const HEIGHT = 630
 
 // The words, read from the same files the pages are built from.
 const vite = await createServer({ root, logLevel: 'error', appType: 'custom', server: { middlewareMode: true, hmr: false, ws: false } })
-const { work } = await vite.ssrLoadModule('/src/content/work.ts')
+const { work } = await vite.ssrLoadModule('/src/content/cases.ts')
 const { hero } = await vite.ssrLoadModule('/src/content/hero.ts')
 const { lookFor } = await vite.ssrLoadModule('/src/case/look.ts')
 await vite.close()
 
 // The colours and the grain, read from the stylesheet.
-const styles = readFileSync(`${root}src/styles.css`, 'utf8')
+const styles = readFileSync(`${root}src/base.css`, 'utf8')
 const token = (name) => {
   const found = new RegExp(`--${name}:\\s*([^;]+);`).exec(styles)
-  if (!found) throw new Error(`src/styles.css has no --${name}.`)
+  if (!found) throw new Error(`src/base.css has no --${name}.`)
   return found[1].trim()
 }
 const font = readFileSync(`${root}node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2`).toString('base64')

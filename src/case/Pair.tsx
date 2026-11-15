@@ -1,26 +1,6 @@
 import type { CSSProperties } from 'react'
-import type { Work } from '../content/work'
-import { Arrow, Shot } from './parts'
-
-const SIZES = '(min-width: 761px) 50vw, 100vw'
-
-/**
- * The picture of one half: the picture at the top of its own page when it has one, otherwise the first screen of the
- * site as the home page's gallery shows it. Here it is decoration: the words under each half name it, so it carries
- * no description of its own (a screen reader would otherwise hear the same description twice on one page, and the
- * link's name would start with it).
- */
-function Face({ item }: { item: Work }) {
-  const hero = item.pictures.find((entry) => entry.name === item.media.hero)
-  if (hero) return <Shot slug={item.slug} picture={{ ...hero, caption: undefined, alt: '' }} sizes={SIZES} reveal={false} />
-  return (
-    <figure className="case-shot" data-kind="desktop">
-      <div className="case-shot-frame">
-        <img src={item.site.shot} width={1440} height={900} alt="" loading="lazy" decoding="async" />
-      </div>
-    </figure>
-  )
-}
+import type { Work } from '../content/cases'
+import { Arrow } from './parts'
 
 /**
  * "Two deliverables, one client": the two Kencho projects side by side. The
@@ -36,7 +16,6 @@ export function Pair({ item, other, here, there }: { item: Work; other: Work; he
       </h2>
       <div className="case-pair-halves">
         <div className="case-half" data-reveal="up">
-          <Face item={item} />
           <p className="case-half-kind">
             <span>{here}</span>
             <span>{item.site.domain}</span>
@@ -47,7 +26,6 @@ export function Pair({ item, other, here, there }: { item: Work; other: Work; he
           </p>
         </div>
         <a className="case-half" href={`/work/${other.slug}`} data-reveal="up" style={{ '--d': 1 } as CSSProperties}>
-          <Face item={other} />
           <span className="case-half-kind">
             <span>{there}</span>
             <span>{other.site.domain}</span>

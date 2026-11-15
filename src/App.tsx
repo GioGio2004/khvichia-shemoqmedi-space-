@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { Stack } from './about/Stack'
 import { Mark } from './components/Mark'
 import { Menu } from './components/Menu'
@@ -16,16 +17,30 @@ export function App() {
       <nav aria-label="Home">
         <Mark />
       </nav>
-      <Menu />
+      <Suspense fallback={null}>
+        <Menu />
+      </Suspense>
+      {/* Each part of the page is its own boundary, so React takes the built page over a part at a time (each in a
+          short task the browser can paint and answer between) instead of in one long task. Nothing here ever waits. */}
       <main>
-        <Hero />
-        <Stack />
-        <div className="work-hold">
-          <Work />
-        </div>
-        <Frames />
+        <Suspense fallback={null}>
+          <Hero />
+        </Suspense>
+        <Suspense fallback={null}>
+          <Stack />
+        </Suspense>
+        <Suspense fallback={null}>
+          <div className="work-hold">
+            <Work />
+          </div>
+        </Suspense>
+        <Suspense fallback={null}>
+          <Frames />
+        </Suspense>
       </main>
-      <Footer />
+      <Suspense fallback={null}>
+        <Footer />
+      </Suspense>
     </>
   )
 }

@@ -1,4 +1,4 @@
-import { Fragment, useState, type CSSProperties } from 'react'
+import { Fragment, Suspense, useState, type CSSProperties } from 'react'
 import { stack, type Group, type Tool } from '../content/stack'
 import { work } from '../content/work'
 import { SkillsCard } from './Skills'
@@ -76,11 +76,16 @@ export function Stack() {
   return (
     <section id="skills" className="stack">
       <h2 className="sr-only">Skills, stack and experience</h2>
-      <SkillsCard count={`00 / ${two(stack.length)}`} />
+      {/* Each card is taken over by React on its own (see App.tsx), so no single task holds the browser for long. */}
+      <Suspense fallback={null}>
+        <SkillsCard count={`00 / ${two(stack.length)}`} />
+      </Suspense>
       <div className="stack-hold" aria-hidden />
       {stack.map((group, i) => (
         <Fragment key={group.title}>
-          <Card group={group} index={i} />
+          <Suspense fallback={null}>
+            <Card group={group} index={i} />
+          </Suspense>
           {/* Empty room after each card: scrolling through it holds the card in full view before the next one comes up. */}
           <div className="stack-hold" aria-hidden />
         </Fragment>

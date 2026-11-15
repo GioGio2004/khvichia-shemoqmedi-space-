@@ -1,8 +1,9 @@
 /*
  * The case-study pages (/work/<slug>) and the "not found" page. The tokens,
- * the monogram, the menu tab and the contact sheet come from styles.css,
- * which this page loads as well; everything here is new and starts with
- * "case-", so it cannot disturb the home page.
+ * the monogram, the menu tab and the contact sheet come from base.css,
+ * which this page loads as well (the home page's own rules, in home.css,
+ * are not loaded here); everything here is new and starts with "case-", so
+ * it cannot disturb the home page.
  *
  * One set of parts for all four projects. A section stands on one of three
  * grounds, set with data-ground: paper (white), ink (charcoal with grain) or
@@ -22,67 +23,6 @@ html[data-page='case'] .mark {
 }
 html[data-page='case'] .menu {
   view-transition-name: gk-menu;
-}
-/* The monogram is 40 pixels square (36 on phones); this makes it 44 for a finger without changing how it looks. */
-html[data-page='case'] .mark::after {
-  content: '';
-  position: absolute;
-  inset: -4px;
-}
-
-/* ---------- The tag beside the monogram ---------- */
-
-.case-crumb {
-  position: fixed;
-  top: calc((var(--menu-h) - 40px) / 2);
-  left: calc(var(--edge) + 44px);
-  z-index: 40;
-  display: flex;
-  align-items: center;
-  height: 40px;
-  padding-left: 14px;
-  color: var(--paper);
-  background: var(--ink);
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  view-transition-name: gk-crumb;
-  transition:
-    color 0.35s ease,
-    background-color 0.35s ease;
-}
-.case-crumb[data-tone='light'] {
-  color: var(--ink);
-  background: var(--tab);
-}
-.case-crumb-index {
-  padding-right: 14px;
-  opacity: 0.72;
-}
-.case-crumb a {
-  position: relative;
-  display: flex;
-  align-items: center;
-  height: 40px;
-  padding: 0 14px;
-  border-left: 1px solid color-mix(in srgb, currentColor 24%, transparent);
-  transition: color 0.25s ease;
-}
-/* The link is 40 pixels tall like the tag; this makes it 44 for a finger. */
-.case-crumb a::after {
-  content: '';
-  position: absolute;
-  inset: -2px 0;
-}
-.case-crumb a:hover {
-  color: var(--accent);
-}
-.case-crumb a:first-child {
-  margin-left: -14px;
-  border-left: 0;
 }
 
 /* ---------- The page and its grounds ---------- */
@@ -146,7 +86,6 @@ html[data-page='case'] .mark::after {
 .case-glance dt,
 .case-stages dt,
 .case-role-tag,
-.case-shot figcaption,
 .case-visit-where,
 .case-half-kind,
 .case-next-top,
@@ -343,70 +282,6 @@ html[data-page='case'] .mark::after {
   animation: settle 1s var(--out) 0.6s both;
 }
 
-/* The picture at the top comes up into place with the opening. It only moves: it is visible from the first frame. */
-.case-hero-shot {
-  position: relative;
-  z-index: 1;
-  animation: case-lift 1.3s var(--out) both;
-}
-@keyframes case-lift {
-  from {
-    transform: translateY(56px);
-  }
-}
-/* A slab of colour behind the lower half of that picture, from edge to edge: the picture stands in front of it. */
-.case-stage {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 0;
-  /* --ratio is the shape of the picture (its height over its width); --shape replaces it where another picture is shown. */
-  height: calc((100vw - 2 * var(--edge)) * var(--shape, var(--ratio)) * 0.52 + clamp(40px, 6vw, 96px));
-  transform-origin: bottom;
-  animation: grow 1.2s var(--out) 0.15s both;
-}
-
-/* The caption of that picture stands on the slab, not on the paper, so it is coloured for the slab. */
-.case-hero[data-stage='ink'] .case-hero-shot figcaption {
-  color: rgb(255 255 255 / 0.64);
-}
-
-/* ---------- Pictures ---------- */
-
-.case-shot {
-  min-width: 0;
-}
-.case-shot-frame {
-  overflow: hidden;
-  border: 1px solid var(--rule);
-}
-.case-shot img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-.case-shot figcaption {
-  margin-top: 12px;
-}
-/* Edge to edge, a picture needs no frame. Its caption keeps a little ground under it, so it reads as the picture's and not as a heading for what follows. */
-.case[data-bleed] .case-hero {
-  padding-bottom: clamp(14px, 1.6vw, 24px);
-}
-.case[data-bleed] .case-hero-shot,
-.case[data-bleed] .case-row-shot {
-  margin-right: calc(var(--edge) * -1);
-  margin-left: calc(var(--edge) * -1);
-}
-.case[data-bleed] .case-hero-shot .case-shot-frame,
-.case[data-bleed] .case-row-shot .case-shot-frame,
-.case[data-bleed] [data-row='full'] .case-shot-frame {
-  border: 0;
-}
-.case[data-bleed] .case-shot figcaption {
-  padding: 0 var(--edge);
-}
-
 /* ---------- Coming into view (see useReveal.ts) ---------- */
 
 [data-reveal='up'] {
@@ -417,22 +292,6 @@ html[data-page='case'] .mark::after {
 [data-reveal='up'][data-seen='false'] {
   opacity: 0;
   transform: translateY(24px);
-  transition: none;
-}
-/* A picture unrolls downwards from its top edge and eases back to its size. */
-[data-reveal='shot'] .case-shot-frame {
-  clip-path: inset(0);
-  transition: clip-path 1.2s var(--out);
-}
-[data-reveal='shot'] img {
-  transition: transform 1.6s var(--out);
-}
-[data-reveal='shot'][data-seen='false'] .case-shot-frame {
-  clip-path: inset(0 0 100% 0);
-  transition: none;
-}
-[data-reveal='shot'][data-seen='false'] img {
-  transform: scale(1.07);
   transition: none;
 }
 
@@ -575,27 +434,6 @@ html[data-page='case'] .mark::after {
   line-height: 1.5;
   color: var(--text);
 }
-.case-row-shot {
-  grid-column: 1 / -1;
-  margin-top: clamp(20px, 2.3vw, 34px);
-}
-/* Edge to edge the rows take the whole width, so their pictures can too. */
-.case[data-bleed] .case-built > * {
-  grid-column: 1 / -1;
-}
-.case[data-bleed] .case-rows > li {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-.case[data-bleed] .case-rows h3 {
-  grid-column: 2 / 4;
-}
-.case[data-bleed] .case-rows > li:has(.case-row-shot) {
-  padding-bottom: 0;
-  border-bottom: 0;
-}
-.case[data-bleed] .case-rows > li:has(.case-row-shot) + li {
-  margin-top: clamp(56px, 8vw, 120px);
-}
 
 /*
  * The same contributions as a grid of cells, two or three across (Case.tsx picks the number that leaves no cell
@@ -705,43 +543,6 @@ html[data-page='case'] .mark::after {
   color: var(--text);
 }
 
-/* ---------- The remaining pictures, as a sequence of rows ---------- */
-
-.case-sequence {
-  display: grid;
-  row-gap: clamp(16px, 3.2vw, 48px);
-  padding: 0 var(--edge) clamp(72px, 10.5vw, 160px);
-}
-.case-seq-row {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: clamp(16px, 3.2vw, 48px) var(--gutter);
-  align-items: start;
-}
-.case-seq-row[data-row='full'] > * {
-  grid-column: 1 / -1;
-}
-.case-seq-row[data-row='pair'] > * {
-  grid-column: span 2;
-}
-/* A phone picture is never shown wider than the phone it was taken on. */
-.case-seq-row[data-row='phones'] > * {
-  max-width: 390px;
-}
-/* Up to three phone pictures leave the first column free, so the row hangs like the text above it. */
-.case-seq-row[data-row='phones'] > :first-child:nth-last-child(-n + 3) {
-  grid-column-start: 2;
-}
-/* Edge to edge each picture is a plate of its own: its caption close under it, then a wide band of the ground before the next one. */
-.case[data-bleed] .case-sequence {
-  row-gap: clamp(56px, 8vw, 120px);
-  padding-right: 0;
-  padding-left: 0;
-}
-.case[data-bleed] .case-seq-row:not([data-row='full']) {
-  padding: 0 var(--edge);
-}
-
 /* ---------- Status: now, next, later ---------- */
 
 /* The stages share the width between them, however many there are (--n). */
@@ -806,12 +607,6 @@ html[data-page='case'] .mark::after {
 }
 .case-half {
   display: block;
-}
-.case-half .case-shot-frame {
-  border-color: var(--rule);
-}
-.case-half img {
-  transition: transform 1.2s var(--out);
 }
 .case-half-kind {
   display: flex;
@@ -1130,13 +925,6 @@ a.case-half .case-half-go {
 /* ---------- Narrower windows ---------- */
 
 @media (max-width: 1100px) {
-  /* Edge to edge the rows go back to the plain three parts: the number needs little room and the line of text a lot. */
-  .case[data-bleed] .case-rows > li {
-    grid-template-columns: 3.4rem minmax(0, 5fr) minmax(0, 4fr);
-  }
-  .case[data-bleed] .case-rows h3 {
-    grid-column: auto;
-  }
 
   /* The stages stand one under another, each with its name on the left and its text beside it. */
   .case-stages {
@@ -1152,14 +940,6 @@ a.case-half .case-half-go {
   .case-stages dd {
     max-width: 50ch;
     margin-top: 0;
-  }
-}
-
-/* Between a phone and a desktop a phone picture takes half the width, so it is shown at about its real size. */
-@media (min-width: 761px) and (max-width: 1100px) {
-  .case-seq-row[data-row='phones'] > *,
-  .case-seq-row[data-row='phones'] > :first-child:nth-last-child(-n + 3) {
-    grid-column: span 2;
   }
 }
 
@@ -1227,43 +1007,10 @@ a.case-half .case-half-go {
 }
 
 @media (max-width: 760px) {
-  .case-crumb-index > span {
-    display: none;
-  }
-  .case-crumb {
-    padding-left: 10px;
-  }
-  .case-crumb-index {
-    padding-right: 10px;
-  }
-  .case-crumb a {
-    padding: 0 10px;
-  }
-  .case-crumb a:first-child {
-    margin-left: -10px;
-  }
-
   .case-hero-head {
     min-height: clamp(380px, 52svh, 620px);
   }
-  /*
-   * The picture at the top, when the same screen was also taken on a phone: phones are handed that file (parts.tsx)
-   * and show the top of it, four wide and five tall, at close to its real size. The slab behind it follows.
-   */
-  .case-hero-shot[data-phone] .case-shot-frame {
-    position: relative;
-    aspect-ratio: 4 / 5;
-  }
-  .case-hero-shot[data-phone] img {
-    position: absolute;
-    inset: 0;
-    height: 100%;
-    object-fit: cover;
-    object-position: top;
-  }
-  .case-hero[data-phone] .case-stage {
-    --shape: 1.25;
-  }
+
   .case-next {
     min-height: clamp(340px, 62svh, 560px);
   }
@@ -1288,12 +1035,6 @@ a.case-half .case-half-go {
   .case-rows > li > p {
     grid-column: 2;
   }
-  .case[data-bleed] .case-rows > li {
-    grid-template-columns: 2.6rem minmax(0, 1fr);
-  }
-  .case[data-bleed] .case-rows h3 {
-    grid-column: 2;
-  }
 
   /* The roles step in by a fixed amount, there are no columns to step by. */
   .case-roles > li {
@@ -1301,25 +1042,6 @@ a.case-half .case-half-go {
   }
   .case-role {
     padding-left: 20px;
-  }
-
-  /*
-   * Pictures. The phone ones come first and stand one under another at most of the width, so they are close to
-   * their real size and can be read; they lean left and right by turns. The desktop ones follow, one under another.
-   */
-  .case-seq-row[data-row='phones'] {
-    order: -1;
-  }
-  .case-seq-row[data-row='pair'] > *,
-  .case-seq-row[data-row='phones'] > *,
-  .case-seq-row[data-row='phones'] > :first-child:nth-last-child(-n + 3) {
-    grid-column: 1 / -1;
-  }
-  .case-seq-row[data-row='phones'] > * {
-    width: 80%;
-  }
-  .case-seq-row[data-row='phones'] > :nth-child(even) {
-    justify-self: end;
   }
 
   .case-pair-halves {
@@ -1368,22 +1090,9 @@ a.case-half .case-half-go {
   }
 }
 
-/* The narrowest phones: the tag keeps only the way back, so it never runs under the menu tab, and the live link is set a little smaller so it stays on one line. */
+/* The narrowest phones: the live link is set a little smaller so it stays on one line. */
 @media (max-width: 400px) {
   .case-visit-line a {
     font-size: 8.2vw;
-  }
-}
-@media (max-width: 350px) {
-  .case-crumb {
-    padding-left: 0;
-  }
-  .case-crumb-index {
-    display: none;
-  }
-  .case-crumb a,
-  .case-crumb a:first-child {
-    margin-left: 0;
-    border-left: 0;
   }
 }

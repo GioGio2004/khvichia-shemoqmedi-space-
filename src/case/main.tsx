@@ -1,5 +1,5 @@
 import '@fontsource-variable/inter'
-import '../styles.css'
+import '../base.css'
 import './view-transition.css'
 import './case.css'
 
@@ -7,6 +7,7 @@ import { StrictMode } from 'react'
 import { createRoot, hydrateRoot } from 'react-dom/client'
 import { Root } from './Root'
 import { headFor, pageAt } from './route'
+import { fetchLater } from '../lib/later'
 
 /**
  * The script of every page that is not the home page (case.html): the four
@@ -24,6 +25,8 @@ const app = (
 
 // The built pages already hold their content and their own title (see scripts/prerender.mjs); the script only takes
 // them over. While developing the page is empty, so it is drawn from scratch and the title is set here.
+fetchLater()
+
 if (root.hasChildNodes()) hydrateRoot(root, app)
 else {
   document.title = headFor(pageAt(path)).title

@@ -13,6 +13,9 @@ import street from '../assets/road/tbilisi-friends-colour.webp'
  * Every photo has a comment that comes up while it is in the frame; the
  * comments take turns on the left and the right of the frame.
  *
+ *   size    the width and height of the photo's file, in pixels, so the
+ *           page keeps the photo's room before it has loaded (check them
+ *           again after `npm run road` has made a photo anew)
  *   note    the comment
  *   link    makes the comment a link (opens in a new tab)
  *   focus   the point of the photo that stays in view when it is cropped:
@@ -29,6 +32,7 @@ import street from '../assets/road/tbilisi-friends-colour.webp'
 export type Frame = {
   slug: string
   colour: string
+  size: [number, number]
   focus: [number, number]
   note?: string
   link?: string
@@ -37,12 +41,13 @@ export type Frame = {
 }
 
 export const road: Frame[] = [
-  { slug: 'street', colour: street, focus: [0.42, 0.42], note: 'Me and my friends in the street.' },
-  { slug: 'caps', colour: caps, focus: [0.46, 0.42], note: 'GTU graduation.' },
-  { slug: 'graduation', colour: graduation, focus: [0.52, 0.41], note: 'Same thing.' },
+  { slug: 'street', colour: street, size: [1200, 1600], focus: [0.42, 0.42], note: 'Me and my friends in the street.' },
+  { slug: 'caps', colour: caps, size: [1280, 853], focus: [0.46, 0.42], note: 'GTU graduation.' },
+  { slug: 'graduation', colour: graduation, size: [1066, 1600], focus: [0.52, 0.41], note: 'Same thing.' },
   {
     slug: 'bery',
     colour: bery,
+    size: [1024, 1536],
     focus: [0.5, 0.36],
     stay: 0.9,
     cameo: {
@@ -52,15 +57,16 @@ export const road: Frame[] = [
       name: ['Bery the', 'honey badger'],
     },
   },
-  { slug: 'coffee', colour: coffee, focus: [0.68, 0.46], note: 'Coffee.' },
+  { slug: 'coffee', colour: coffee, size: [1200, 1600], focus: [0.68, 0.46], note: 'Coffee.' },
   {
     slug: 'show-floor',
     colour: showFloor,
+    size: [1600, 1200],
     focus: [0.42, 0.47],
     note: 'Me and the Torq guy.',
     link: 'https://www.linkedin.com/feed/update/urn:li:activity:7478020126835937281/',
   },
-  { slug: 'gitex-entrance', colour: entrance, focus: [0.5, 0.62], note: 'GITEX AI Europe.' },
+  { slug: 'gitex-entrance', colour: entrance, size: [738, 1600], focus: [0.5, 0.62], note: 'GITEX AI Europe.' },
 ]
 
 /** The word the footer builds out of the last photos, one letter each. */

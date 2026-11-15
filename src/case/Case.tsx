@@ -1,54 +1,23 @@
 import { useRef, type CSSProperties } from 'react'
-import { work, workBySlug, type Picture, type Work } from '../content/work'
+import { work, workBySlug, type Work } from '../content/cases'
 import { Ending } from './Ending'
 import { firstSentence, two } from './fit'
 import { ground, lookFor } from './look'
 import { Pair } from './Pair'
-import { Arrow, Label, Shot, Title } from './parts'
+import { Arrow, Label, Title } from './parts'
 import { Roles } from './Roles'
 import { useReveal } from './useReveal'
-
-/** How wide each kind of picture is shown, for the browser's choice of file. */
-const FULL = '100vw'
-const WIDE = '(min-width: 901px) 75vw, 100vw'
-const HALF = '(min-width: 761px) 50vw, 100vw'
-const PHONE = '(min-width: 1101px) 25vw, (min-width: 761px) 50vw, 80vw'
 
 /** A challenge whose first sentence is longer than this is set a size smaller, so it stays a statement and does not become a wall of display type. */
 const LONG = 60
 
-type Row = { kind: 'full' | 'pair' | 'phones'; pictures: Picture[] }
-
-/**
- * Lays the pictures that are left over out as a sequence of rows. Desktop
- * pictures are large: edge to edge one after another when the project
- * `bleed`s, otherwise two by two with an odd one standing alone first. Phone
- * pictures share one row of narrow columns, placed after the first row so
- * the sizes alternate.
- */
-function sequence(pictures: Picture[], bleed: boolean): Row[] {
-  const desktops = pictures.filter((picture) => picture.kind === 'desktop')
-  const phones = pictures.filter((picture) => picture.kind === 'mobile')
-  const rows: Row[] = []
-  let from = 0
-  if (bleed || desktops.length % 2 === 1) rows.push({ kind: 'full', pictures: desktops.slice(0, ++from) })
-  for (; from < desktops.length; from += bleed ? 1 : 2) {
-    const group = desktops.slice(from, from + (bleed ? 1 : 2))
-    rows.push({ kind: group.length === 2 ? 'pair' : 'full', pictures: group })
-  }
-  const phoneRows: Row[] = []
-  for (let i = 0; i < phones.length; i += 4) phoneRows.push({ kind: 'phones', pictures: phones.slice(i, i + 4) })
-  rows.splice(Math.min(1, rows.length), 0, ...phoneRows)
-  return rows
-}
-
 /**
  * One case study: the page at /work/<slug>. Every project is made of the
- * same parts in the same order (the top with its name and picture, the
- * facts at a glance, the overview, the challenge, what he built, the
- * pictures, the engineering notes, where it stands, the way out); look.ts
+ * same parts in the same order (the top with its name, the facts at a
+ * glance, the overview, the challenge, what he built, the engineering
+ * notes, where it stands, the way out); look.ts
  * says which variant of each part this project gets. All the words come from
- * work.ts, and a value that is not known there is simply not shown.
+ * cases.ts (and the card in work.ts), and a value that is not known there is simply not shown.
  */
 export function Case({ item }: { item: Work }) {
   const root = useRef<HTMLDivElement>(null)
@@ -58,31 +27,15 @@ export function Case({ item }: { item: Work }) {
   const next = workBySlug(item.next)
   const other = look.pair ? workBySlug(look.pair.with) : undefined
 
-  const picture = (name: string) => {
-    const found = item.pictures.find((entry) => entry.name === name)
-    if (!found) throw new Error(`work.ts: ${item.slug} uses a picture called "${name}" that is not in its pictures list.`)
-    return found
-  }
-  const hero = item.media.hero ? picture(item.media.hero) : null
-  // The same screen taken on a phone, when there is one: phones show the top of it instead of a desktop picture shrunk to a quarter.
-  const heroPhone = hero ? item.pictures.find((entry) => entry.kind === 'mobile' && entry.name === `${hero.name}-mobile`) : undefined
-
   // The contributions that are roles go into the diagram; the list under it holds the others.
   const roles = (look.roles ?? []).map((title) => {
     const found = item.contributions.find((entry) => entry.title === title)
-    if (!found) throw new Error(`look.ts: ${item.slug} names a role "${title}" that is not a contribution in work.ts.`)
+    if (!found) throw new Error(`look.ts: ${item.slug} names a role "${title}" that is not a contribution in cases.ts.`)
     return found
   })
   const built = item.contributions.filter((entry) => !roles.includes(entry))
   // Cells stand two or three across, whichever leaves no cell empty at the end.
   const cols = built.length % 3 !== 0 && built.length % 2 === 0 ? 2 : 3
-
-  // In the grid of cells a picture has no room beside its text, so those pictures lead the sequence instead, under the name of what they show.
-  const shown = look.built === 'cells' ? item.contributions.filter((entry) => entry.media) : []
-  const taken = new Set([item.media.hero, ...item.contributions.map((entry) => entry.media)])
-  const rest = item.media.gallery.filter((name) => !taken.has(name)).map(picture)
-  const labels = new Map(shown.map((entry) => [entry.media!, entry.title]))
-  const rows = sequence([...shown.map((entry) => picture(entry.media!)), ...rest], look.bleed)
 
   const facts = [
     { label: 'Role', lines: item.role.split(' · ') },
@@ -104,14 +57,9 @@ export function Case({ item }: { item: Work }) {
   const pair = look.pair && other ? <Pair item={item} other={other} here={look.pair.here} there={look.pair.there} /> : null
 
   return (
-    <div ref={root} className="case" data-project={item.slug} data-bleed={look.bleed || undefined}>
+    <div ref={root} className="case" data-project={item.slug}>
       <main id="top">
-      <section
-        className="case-hero"
-        {...ground(look.hero)}
-        data-stage={hero && look.stage !== 'none' ? look.stage : undefined}
-        data-phone={heroPhone ? '' : undefined}
-      >
+      <section className="case-hero" {...ground(look.hero)}>
         <div className="case-hero-head">
           <div className="case-lines" aria-hidden>
             <i />
@@ -130,14 +78,6 @@ export function Case({ item }: { item: Work }) {
           <Title text={item.title} className="case-title" />
           <p className="case-subtitle">{item.subtitle}</p>
         </div>
-        {hero ? (
-          <>
-            {look.stage !== 'none' ? (
-              <div className="case-stage" {...ground(look.stage)} style={{ '--ratio': hero.height / hero.width } as CSSProperties} aria-hidden />
-            ) : null}
-            <Shot slug={item.slug} picture={hero} phone={heroPhone} sizes={FULL} eager reveal={false} className="case-hero-shot" />
-          </>
-        ) : null}
       </section>
 
       <section className="case-glance" aria-labelledby="case-glance">
@@ -184,7 +124,7 @@ export function Case({ item }: { item: Work }) {
 
       {look.pair?.place === 'top' ? pair : null}
 
-      <section className="case-block case-built" data-built={look.built} {...ground(look.pictures)}>
+      <section className="case-block case-built" data-built={look.built} {...ground(look.builtOn)}>
         <Label n={++count}>What I built</Label>
         {roles.length ? <Roles roles={roles} /> : null}
         <ol className={look.built === 'cells' ? 'case-cells' : 'case-rows'} data-cols={look.built === 'cells' ? cols : undefined}>
@@ -195,31 +135,10 @@ export function Case({ item }: { item: Work }) {
               </span>
               <h3>{entry.title}</h3>
               <p>{entry.body}</p>
-              {entry.media && look.built === 'rows' ? (
-                <Shot slug={item.slug} picture={picture(entry.media)} sizes={look.bleed ? FULL : WIDE} className="case-row-shot" />
-              ) : null}
             </li>
           ))}
         </ol>
       </section>
-
-      {rows.length ? (
-        <section className="case-sequence" aria-label={`Pictures of ${item.title}`} {...ground(look.pictures)}>
-          {rows.map((row, r) => (
-            <div key={r} className="case-seq-row" data-row={row.kind} style={{ '--n': row.pictures.length } as CSSProperties}>
-              {row.pictures.map((entry) => (
-                <Shot
-                  key={entry.name}
-                  slug={item.slug}
-                  picture={entry}
-                  sizes={row.kind === 'full' ? FULL : row.kind === 'pair' ? HALF : PHONE}
-                  label={labels.get(entry.name)}
-                />
-              ))}
-            </div>
-          ))}
-        </section>
-      ) : null}
 
       <section className="case-block case-notes">
         <Label n={++count}>Engineering notes</Label>

@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import type { Contribution } from '../content/work'
+import type { Contribution } from '../content/cases'
 import { two } from './fit'
 
 /**
@@ -8,7 +8,7 @@ import { two } from './fit'
  * branches off it one step further in, with an orange square where it
  * starts. So the roles read as levels of one system and not as separate
  * boxes. It is drawn with plain lines, not a picture, so it stays sharp at
- * any size. The names and the words are the contributions in work.ts that
+ * any size. The names and the words are the contributions in cases.ts that
  * look.ts names as roles.
  */
 export function Roles({ roles }: { roles: Contribution[] }) {

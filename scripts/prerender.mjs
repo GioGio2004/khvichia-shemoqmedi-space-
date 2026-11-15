@@ -17,9 +17,11 @@
  *   3. the text font is announced at the top, so it starts loading at once,
  *   4. the head gets what the page says about itself: a case study gets its
  *      own title, description, address and share picture; the home page keeps
- *      the head written in index.html and only gains the share picture.
+ *      the head written in index.html and only gains the share picture,
+ *   5. the page's script is fetched only once the page has loaded, or at the
+ *      visitor's first press, tap, scroll or key (see loadScriptsLater).
  *
- * It also writes the "Case studies" part of dist/llms.txt from work.ts (the
+ * It also writes the "Case studies" part of dist/llms.txt from work.ts and cases.ts (the
  * rest of that file is public/llms.txt as it stands).
  *
  * dist/case.html itself is only the mould for those pages and is removed at
@@ -75,8 +77,11 @@ function shareTags(share) {
   ]
 }
 
+/** Structured data as a script tag; "<" is escaped so no text in it can close the tag early. */
+const dataTag = (data) => (data ? `<script type="application/ld+json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>` : null)
+
 /** The whole head of a page that is not the home page. */
-function headTags(head, share) {
+function headTags(head, share, data) {
   return [
     `<title>${attr(head.title)}</title>`,
     preload,
@@ -90,7 +95,29 @@ function headTags(head, share) {
     ...shareTags(share),
     meta('name', 'twitter:title', head.title),
     meta('name', 'twitter:description', head.description),
+    dataTag(data),
   ].filter(Boolean)
+}
+
+/**
+ * The page's own script is not fetched while the page is opening. The built page already shows everything (the
+ * opening is drawn by the stylesheet), so the script is only needed to take it over: to make the menu, the gallery
+ * and the rest respond. It is fetched once the page has finished loading, or at once if the visitor presses, taps,
+ * scrolls or types first, so it never competes with what the opening screen needs. The script tag and the
+ * "fetch this early" hints Vite writes into the head are taken out and replaced by this small loader at the end of
+ * the page.
+ */
+function loadScriptsLater(html) {
+  const entry = /<script type="module" crossorigin src="(\/assets\/[^"]+\.js)"><\/script>\s*/
+  const found = html.match(entry)
+  if (!found) throw new Error('No module script in the page to load later.')
+  const chunks = [...html.matchAll(/<link rel="modulepreload" crossorigin href="(\/assets\/[^"]+\.js)">\s*/g)]
+  html = html.replace(entry, '')
+  for (const [tag] of chunks) html = html.replace(tag, '')
+  const urls = JSON.stringify([found[1], ...chunks.map(([, url]) => url)])
+  const loader = `<script>(()=>{let d=0;const go=()=>{if(d)return;d=1;${urls}.forEach((u,i)=>{const e=document.createElement(i?"link":"script");if(i){e.rel="modulepreload";e.href=u}else{e.type="module";e.src=u}e.crossOrigin="";document.head.append(e)})};["pointermove","pointerdown","keydown","touchstart","wheel"].forEach(n=>addEventListener(n,go,{once:true,passive:true,capture:true}));document.readyState=="complete"?go():addEventListener("load",go,{once:true})})()</script>`
+  if (!html.includes('</body>')) throw new Error('No </body> to put the loader before.')
+  return html.replace('</body>', () => `${loader}\n  </body>`)
 }
 
 // Every share picture a page names must be there (they are made by `npm run og` and kept in public/og/).
@@ -109,7 +136,7 @@ for (const path of paths) {
     // A case study or the "not found" page: the mould has only a placeholder title.
     const title = /<title>[^<]*<\/title>/
     if (!title.test(html)) throw new Error(`${page.shell} has no <title> to replace.`)
-    html = html.replace(title, () => headTags(page.head, page.share).join('\n    '))
+    html = html.replace(title, () => headTags(page.head, page.share, page.data).join('\n    '))
   } else {
     // The home page: its head stays as index.html has it, with the font and the share picture added. They go right
     // under the title, before the stylesheet that is put inside the page: a link preview reads only the start of a page.
@@ -119,18 +146,20 @@ for (const path of paths) {
   const picture = new URL(page.share.image).pathname
   if (!existsSync(`${dist}${picture.slice(1)}`)) missingPictures.add(picture)
 
+  html = loadScriptsLater(html)
+
   const file = `${dist}${page.file}`
   mkdirSync(dirname(file), { recursive: true })
   writeFileSync(file, html)
   console.log(`prerendered ${path.padEnd(22)} ${page.file.padEnd(32)} page ${kB(page.html)}, styles ${(styles / 1024).toFixed(0)} kB, file ${kB(html)}`)
 }
 
-// llms.txt: the lines under "## Case studies" are replaced by the ones made from work.ts.
+// llms.txt: the lines under "## Case studies" are replaced by the ones made from work.ts and cases.ts.
 const llms = readFileSync(`${dist}llms.txt`, 'utf8').replace(/\r\n/g, '\n')
 const section = /(## Case studies\n\n)(?:- .*\n)+/
 if (!section.test(llms)) throw new Error('public/llms.txt has no "## Case studies" list to fill.')
 writeFileSync(`${dist}llms.txt`, llms.replace(section, (_all, heading) => `${heading}${caseLines.join('\n')}\n`))
-console.log(`llms.txt               ${caseLines.length} case-study lines written from work.ts`)
+console.log(`llms.txt               ${caseLines.length} case-study lines written from cases.ts`)
 
 rmSync(`${dist}case.html`, { force: true })
 rmSync(server, { recursive: true, force: true })

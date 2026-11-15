@@ -1,5 +1,7 @@
-import { useEffect, useRef, type CSSProperties } from 'react'
-import { road as frames } from '../content/road'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { road as frames, type Frame } from '../content/road'
+import { afterGallery } from '../lib/ready'
+import { useReducedMotion } from '../lib/scroll'
 import { useScrollFrame } from '../lib/useScrollFrame'
 
 const two = (n: number) => String(n).padStart(2, '0')
@@ -22,6 +24,44 @@ const PULL = 13
 const clamp = (x: number) => Math.min(Math.max(x, 0), 1)
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
 
+/** The part of a photo that stays in view when it is cropped. */
+const focus = (photo: Frame) => ({ objectPosition: `${photo.focus[0] * 100}% ${photo.focus[1] * 100}%` })
+
+/** What a photo's comment says: its number in brackets, then its line (a link if it has one), or the guest's lines and name. */
+function Caption({ photo, index }: { photo: Frame; index: number }) {
+  return (
+    <>
+      <small>
+        [ {two(index + 1)}
+        {photo.cameo ? ` // ${photo.cameo.tag}` : ''} ]
+      </small>
+      {photo.cameo ? (
+        <>
+          <p className="frames-lead">{photo.cameo.lead}</p>
+          <p className="frames-bridge">{photo.cameo.bridge}</p>
+          <strong>
+            {photo.cameo.name.map((line, n, all) => (
+              <span key={line}>
+                {line}
+                {n === all.length - 1 ? <b>.</b> : null}
+              </span>
+            ))}
+          </strong>
+        </>
+      ) : photo.link ? (
+        <p>
+          <a href={photo.link} target="_blank" rel="noreferrer">
+            {photo.note}
+            <i aria-hidden> ↗</i>
+          </a>
+        </p>
+      ) : (
+        <p>{photo.note}</p>
+      )}
+    </>
+  )
+}
+
 /**
  * The side scroll: scrolling down steps through a row of photos. The one in
  * turn fills the tall frame in the middle of the screen; the others wait as
@@ -42,6 +82,12 @@ const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 
  * After the last photo the footer takes the photos over (see handoff.ts):
  * they leave the row, line up, and become the letters of the closing word.
  *
+ * For people who ask for less motion there is no side scroll: the section
+ * is as tall as its content and shows the photos one under another, each at
+ * the frame's size with its comment beside it (the list at the end, which
+ * the stylesheet shows instead of the stage). The script then writes
+ * nothing.
+ *
  * The section is several screens tall and its stage stays in view the whole
  * way. The script only writes a few things; the stylesheet does the rest:
  *   on the stage   --open (0..1, the opening), --index (whose turn it is),
@@ -53,17 +99,42 @@ const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 
 export function Frames() {
   const section = useRef<HTMLElement>(null)
   const stage = useRef<HTMLDivElement>(null)
+  /**
+   * True once the 3D gallery is ready (see lib/ready.ts), or from the first time the section is within four screens
+   * of the viewport, whichever comes first. From then on its photos are fetched at once, all of them: left to the
+   * browser's own "lazy" judgement, a photo inside the pinned stage would only start to load when it is already
+   * meant to be seen. Before that they are not fetched, so opening the page does not pay for them.
+   */
+  const [close, setClose] = useState(false)
+  useEffect(() => {
+    const watcher = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return
+        setClose(true)
+        watcher.disconnect()
+      },
+      { rootMargin: '400% 0px' },
+    )
+    watcher.observe(section.current!)
+    const stop = afterGallery(() => setClose(true))
+    return () => {
+      watcher.disconnect()
+      stop()
+    }
+  }, [])
+  const loading = close ? 'eager' : 'lazy'
   const count = useRef<HTMLSpanElement>(null)
   const items = useRef<(HTMLLIElement | null)[]>([])
   const notes = useRef<(HTMLDivElement | null)[]>([])
   const shown = useRef(-1)
   /** The row: where it is, how fast it is moving, where it is going, and the running animation frame (0 = at rest). */
   const row = useRef({ at: 0, speed: 0, goal: 0, frame: 0, time: 0 })
+  const calm = useReducedMotion()
 
   useScrollFrame(() => {
     const element = section.current
     const target = stage.current
-    if (!element || !target) return
+    if (!element || !target || calm) return
     const vh = window.innerHeight
     const box = element.getBoundingClientRect()
     if (shown.current >= 0 && (box.bottom < -vh || box.top > vh * 2)) return
@@ -95,7 +166,7 @@ export function Frames() {
     }
     const state = row.current
     state.goal = index
-    if (first || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (first) {
       cancelAnimationFrame(state.frame)
       state.frame = 0
       state.at = index
@@ -158,14 +229,7 @@ export function Frames() {
               }}
               style={{ '--d': i } as CSSProperties}
             >
-              <img
-                src={photo.colour}
-                alt=""
-                loading="lazy"
-                decoding="async"
-                draggable={false}
-                style={{ objectPosition: `${photo.focus[0] * 100}% ${photo.focus[1] * 100}%` }}
-              />
+              <img src={photo.colour} width={photo.size[0]} height={photo.size[1]} alt="" loading={loading} decoding="async" draggable={false} style={focus(photo)} />
             </li>
           ))}
         </ul>
@@ -177,11 +241,13 @@ export function Frames() {
               <img
                 key={photo.slug}
                 src={photo.colour}
+                width={photo.size[0]}
+                height={photo.size[1]}
                 alt=""
-                loading="lazy"
+                loading={loading}
                 decoding="async"
                 draggable={false}
-                style={{ objectPosition: `${photo.focus[0] * 100}% ${photo.focus[1] * 100}%` }}
+                style={focus(photo)}
               />
             ))}
           </div>
@@ -198,39 +264,31 @@ export function Frames() {
             data-side={i % 2 === 0 ? 'left' : 'right'}
             data-big={photo.cameo ? '' : undefined}
           >
-            <small>
-              [ {two(i + 1)}
-              {photo.cameo ? ` // ${photo.cameo.tag}` : ''} ]
-            </small>
-            {photo.cameo ? (
-              <>
-                <p className="frames-lead">{photo.cameo.lead}</p>
-                <p className="frames-bridge">{photo.cameo.bridge}</p>
-                <strong>
-                  {photo.cameo.name.map((line, n, all) => (
-                    <span key={line}>
-                      {line}
-                      {n === all.length - 1 ? <b>.</b> : null}
-                    </span>
-                  ))}
-                </strong>
-              </>
-            ) : photo.link ? (
-              <p>
-                <a href={photo.link} target="_blank" rel="noreferrer">
-                  {photo.note}
-                  <i aria-hidden> ↗</i>
-                </a>
-              </p>
-            ) : (
-              <p>{photo.note}</p>
-            )}
+            <Caption photo={photo} index={i} />
           </div>
         ))}
 
         <p className="frames-count" aria-hidden>
           <span ref={count}>01</span> / {two(frames.length)}
         </p>
+      </div>
+
+      {/* For less motion: the same photos and comments one under another, in order (hidden otherwise). */}
+      <div className="frames-still">
+        <p className="frames-still-title" aria-hidden>
+          <small>Along the way,</small>
+          <span>a few frames</span>
+        </p>
+        <ol>
+          {frames.map((photo, i) => (
+            <li key={photo.slug} data-side={i % 2 === 0 ? 'left' : 'right'}>
+              <img src={photo.colour} width={photo.size[0]} height={photo.size[1]} alt="" loading="lazy" decoding="async" draggable={false} style={focus(photo)} />
+              <div className="frames-note" data-side={i % 2 === 0 ? 'left' : 'right'} data-big={photo.cameo ? '' : undefined}>
+                <Caption photo={photo} index={i} />
+              </div>
+            </li>
+          ))}
+        </ol>
       </div>
     </section>
   )

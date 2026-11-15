@@ -371,6 +371,12 @@ function Word({ word, photos, section, onTaken, onEnding }: Props) {
  * up, each is trimmed to a letter, the word grows to fill the screen, and
  * the letters fill with black. The scene is measured in screen pixels and
  * covers the whole screen.
+ *
+ * Nothing is drawn while the footer is far away ("never"); near it the
+ * picture is drawn on every frame ("always"), so it can never miss a change.
+ * When the letters are taken off the page, React Three Fiber
+ * disposes the planes and their materials and lets the WebGL context go, and
+ * the effects above dispose the photos and the masks.
  */
 export default function Letters(props: Props) {
   return (
@@ -378,6 +384,10 @@ export default function Letters(props: Props) {
       orthographic
       dpr={[1, 2]}
       frameloop={props.inView ? 'always' : 'never'}
+      // Measured at once and never on scroll. By default the canvas waits until the page has stood still for 50 ms before it
+      // takes its size, and draws nothing until then: mounted while the visitor is scrolling (as it always is here), it
+      // would stay empty for as long as the page keeps moving.
+      resize={{ scroll: false, debounce: 0 }}
       gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
     >
       <Word {...props} />

@@ -78,6 +78,12 @@ const headline = profile.headline.replace(/\.$/, '')
  */
 export function Menu({ home = false }: { home?: boolean }) {
   const [open, setOpen] = useState(false)
+  /** True once the menu has been opened: until then the browser skips laying out the two sheets, which nobody has seen. */
+  const [woken, setWoken] = useState(false)
+  const wake = () => {
+    setOpen(true)
+    setWoken(true)
+  }
   const [sheet, setSheet] = useState<Sheet | null>(null)
   const onDark = useOnDark(32)
   const root = useRef<HTMLElement>(null)
@@ -133,6 +139,7 @@ export function Menu({ home = false }: { home?: boolean }) {
     const onAsk = (event: Event) => {
       asker.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
       setOpen(true)
+      setWoken(true)
       setSheet((event as CustomEvent<Sheet>).detail)
     }
     window.addEventListener(SHEET_EVENT, onAsk)
@@ -183,6 +190,7 @@ export function Menu({ home = false }: { home?: boolean }) {
       className="menu"
       data-open={open}
       data-sheet={shown ?? undefined}
+      data-woken={woken || undefined}
       data-contact={shown === 'contact'}
       data-tone={onDark ? 'light' : 'dark'}
       data-lenis-prevent={shown ? true : undefined}
@@ -196,7 +204,7 @@ export function Menu({ home = false }: { home?: boolean }) {
         aria-expanded={open}
         aria-controls="menu-links"
         aria-label={open ? 'Close the menu' : 'Open the menu'}
-        onClick={() => (open ? close() : setOpen(true))}
+        onClick={() => (open ? close() : wake())}
       >
         <span className="menu-word" aria-hidden>
           <span>Menu</span>

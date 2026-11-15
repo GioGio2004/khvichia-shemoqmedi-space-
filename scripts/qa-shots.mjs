@@ -29,6 +29,8 @@
  * The home page's states, in order: hero, skills, stack-interface, stack-engine, stack-around, stack-engine-hover,
  * gallery-1 .. gallery-N, gallery-open, frames-first, frames-bery, frames-last, footer-letters, footer-end,
  * menu-open, about-open, contact-open, contact-open-zoom (a close-up of the outlined name around "Kv", three times as sharp).
+ * With less motion nothing is pinned: the frames-* pictures show that photo of the still list in the middle of the
+ * screen, and the footer is its last state in type from the start.
  *
  * Pictures land in <out>/<motion>/<width>/<nn>-<name>.png (other pages in a folder of their own under the width),
  * and <out>/manifest.json lists every picture with any console or page errors seen on the way.
@@ -68,7 +70,8 @@ const CARDS = ['interface', 'engine', 'around']
  * Where the gallery says which site is in the middle ("01 / 04"). The page has carried it in two places: a line of its
  * own under the row, and later between the previous and next buttons.
  */
-const COUNT = '#work .work-count, #work .work-nav p'
+/** The work section says which project is in the middle (data-slide, from 1) and how many there are (data-slides). */
+const COUNT = '#work'
 /** How much sharper the close-up of the outlined name is. */
 const ZOOM = 3
 
@@ -300,7 +303,7 @@ async function galleryKind(page) {
   return page.evaluate(() => (document.querySelector('#work .work-stage canvas') ? 'canvas' : document.querySelector('#work .work-plain') ? 'plain' : 'missing'))
 }
 
-const slideNow = (page) => page.evaluate((count) => parseInt(document.querySelector(count)?.textContent ?? '', 10), COUNT)
+const slideNow = (page) => page.evaluate((count) => Number(document.querySelector(count)?.dataset.slide), COUNT)
 
 /** Presses a key on the gallery's stage, the way the page itself listens for it (no focus ring, no real keyboard needed). */
 const galleryKey = (page, key) =>
@@ -309,16 +312,14 @@ const galleryKey = (page, key) =>
     target?.dispatchEvent(new KeyboardEvent('keydown', { key: name, bubbles: true, cancelable: true }))
   }, key)
 
-/**
- * Opens the panel in the middle. The page has had two ways to do that: its own "Preview" button under the row, and
- * before that button existed, the Enter key on the row.
- */
-const openPanel = (page) =>
-  page.evaluate(() => {
-    const button = document.querySelector('#work .work-actions button')
-    if (button) button.click()
-    else document.querySelector('#work .work-stage')?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
+/** Opens the panel in the middle the way a visitor does: a click on its screen. */
+async function openPanel(page) {
+  const point = await page.evaluate(() => {
+    const box = document.querySelector('#work .work-stage').getBoundingClientRect()
+    return { x: box.left + box.width / 2, y: box.top + box.height * 0.53 }
   })
+  await page.mouse.click(point.x, point.y)
+}
 
 /**
  * Rests the pointer on the screen of the middle panel. While it is there the row does not move on by itself, so
@@ -350,7 +351,7 @@ async function gotoSlide(page, wanted, slides) {
     const next = ((now - 1 + (forward ? 1 : slides - 1)) % slides) + 1
     await galleryKey(page, forward ? 'ArrowRight' : 'ArrowLeft')
     await page
-      .waitForFunction(({ count, n }) => parseInt(document.querySelector(count)?.textContent ?? '', 10) === n, { count: COUNT, n: next }, { timeout: 6000 })
+      .waitForFunction(({ count, n }) => Number(document.querySelector(count)?.dataset.slide) === n, { count: COUNT, n: next }, { timeout: 6000 })
       .catch(() => undefined)
   }
   return (await slideNow(page)) === wanted
@@ -405,8 +406,16 @@ async function framesAt(page, index) {
     .catch(() => undefined)
 }
 
-/** Is the footer's word drawn (a canvas), set in plain type (no WebGL), or still missing? */
+/**
+ * Is the footer's word drawn (a canvas), set in plain type (no WebGL), set in type in its last state (less motion:
+ * nothing is drawn at all), or still missing?
+ */
 async function footerKind(page) {
+  const still = await page.evaluate(() => {
+    const word = document.querySelector('.footer-still')
+    return Boolean(word) && getComputedStyle(word).display !== 'none'
+  })
+  if (still) return 'still'
   await page.waitForSelector('.footer-letters canvas, .footer-word', { timeout: 20000 }).catch(() => undefined)
   return page.evaluate(() => (document.querySelector('.footer-letters canvas') ? 'canvas' : document.querySelector('.footer-word') ? 'plain' : 'missing'))
 }
@@ -596,7 +605,7 @@ async function shootHome(page, run, shoot, names) {
         const there = kind === 'canvas' ? await gotoSlide(page, slide, slides) : false
         await page.waitForTimeout(calm ? 300 : 1200)
         const result = await settled(page, { max: 20000 })
-        const title = await page.evaluate((count) => `${document.querySelector(count)?.textContent?.trim()} ${document.querySelector('#work .work-head h3')?.textContent?.trim()}`, COUNT)
+        const title = await page.evaluate((count) => `${document.querySelector(count)?.dataset.slide} / ${document.querySelector(count)?.dataset.slides} ${document.querySelector('#work .work-head h3')?.textContent?.trim()}`, COUNT)
         return { ...result, note: there ? title : `${title} (could not bring slide ${slide} to the middle)` }
       })
     }
@@ -629,7 +638,36 @@ async function shootHome(page, run, shoot, names) {
   }
 
   // ----- the side scroll -----
-  if (anyWanted('frames-')) {
+  // With less motion there is no side scroll: the photos stand one under another (.frames-still), and each picture is
+  // taken with that photo in the middle of the screen.
+  const listed = anyWanted('frames-') && (await page.evaluate(() => {
+    const list = document.querySelector('.frames-still')
+    return Boolean(list) && getComputedStyle(list).display !== 'none'
+  }))
+  if (listed) {
+    const items = await page.evaluate(() => {
+      const all = [...document.querySelectorAll('.frames-still li')]
+      return { count: all.length, cameo: all.findIndex((item) => item.querySelector('.frames-note[data-big]')) }
+    })
+    const cameo = items.cameo >= 0 ? items.cameo : 3
+    const stillShot = async (name, index) => {
+      if (!wanted(name)) return
+      await shoot(name, async () => {
+        const y = await page.evaluate((i) => {
+          const box = document.querySelectorAll('.frames-still li')[i].getBoundingClientRect()
+          return box.top + window.scrollY + box.height / 2 - window.innerHeight / 2
+        }, index)
+        await scrollToY(page, y)
+        await waitImages(page, '.frames-still')
+        await page.waitForTimeout(200)
+        return { ...(await settled(page, { max: 8000 })), note: `photo ${index + 1} of ${items.count}, the list for less motion` }
+      })
+    }
+    await stillShot('frames-first', 0)
+    await stillShot('frames-bery', cameo)
+    await stillShot('frames-last', items.count - 1)
+  }
+  if (anyWanted('frames-') && !listed) {
     const start = await page.evaluate(() => document.querySelector('.frames').getBoundingClientRect().top + window.scrollY)
     await scrollToY(page, start)
     await waitImages(page, '.frames-stage')
@@ -660,7 +698,8 @@ async function shootHome(page, run, shoot, names) {
     const top = await page.evaluate(() => document.querySelector('.footer').getBoundingClientRect().top + window.scrollY)
     await scrollToY(page, top)
     const kind = await footerKind(page)
-    if (kind !== 'canvas') run.notes.push(`footer: no canvas (${kind}); the pictures show what the page shows instead`)
+    if (kind === 'still') run.notes.push('footer: the last state in type, for less motion (no canvas, as intended)')
+    else if (kind !== 'canvas') run.notes.push(`footer: no canvas (${kind}); the pictures show what the page shows instead`)
     else {
       await page.waitForFunction(() => document.querySelector('.footer-stage').style.getPropertyValue('--flood') !== '', null, { timeout: 15000 }).catch(() => run.notes.push('footer: the letters never started drawing'))
     }
@@ -870,7 +909,7 @@ async function runOne(browser, run, options) {
     run.build = await page.evaluate(() => document.querySelector('script[type="module"][src]')?.getAttribute('src')?.split('/').pop() ?? 'unknown')
     if (isHome(run.route) && (await page.locator('#top.hero').count())) {
       // How many sites the gallery has: the page says "01 / 04" under the row.
-      const slides = await page.evaluate((count) => parseInt((document.querySelector(count)?.textContent ?? '').split('/')[1] ?? '', 10) || 0, COUNT)
+      const slides = await page.evaluate((count) => Number(document.querySelector(count)?.dataset.slides) || 0, COUNT)
       order = homeNames(slides)
       await shootHome(page, run, shoot, order)
       if (!run.only || run.only.has('contact-open-zoom')) await shootNameZoom(browser, run, shoot)

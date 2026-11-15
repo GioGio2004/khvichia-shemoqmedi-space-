@@ -1,14 +1,15 @@
 import { Component, Suspense, useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { work } from '../content/work'
+import { markGalleryReady } from '../lib/ready'
 import { lazyWithRetry } from '../lib/retry'
-import { holdScroll } from '../lib/scroll'
+import { holdScroll, reducedMotion } from '../lib/scroll'
 import type { GalleryApi } from './Gallery'
 import { BAR, openWindow } from './layout'
 
-// three.js is only needed for the gallery, so it is a separate file, fetched when the section comes near (see `near`).
+// three.js is only needed for the gallery, so it is a separate file, fetched once the visitor starts to move about the
+// page or the section comes near (see `near`).
 const Gallery = lazyWithRetry(() => import('./Gallery'))
 
-const two = (n: number) => String(n).padStart(2, '0')
 const sites = work.map((item) => item.site)
 /** Where the last project looked at is remembered for this visit, so coming back from its page shows it again. */
 const KEEP = 'gk:work'
@@ -16,19 +17,23 @@ const KEEP = 'gk:work'
 const PATIENCE = 8000
 
 /** If the browser cannot draw the gallery (no WebGL), a plain row of the projects that scrolls sideways takes its place. */
-class GalleryBoundary extends Component<{ fallback: ReactNode; children: ReactNode }, { failed: boolean }> {
+class GalleryBoundary extends Component<{ fallback: ReactNode; onFail: () => void; children: ReactNode }, { failed: boolean }> {
   state = { failed: false }
   static getDerivedStateFromError() {
     return { failed: true }
+  }
+  // The plain row is all there will be, so the skeleton goes.
+  componentDidCatch() {
+    this.props.onFail()
   }
   render() {
     return this.state.failed ? this.props.fallback : this.props.children
   }
 }
 
-function Chevron({ back = false }: { back?: boolean }) {
+function Chevron() {
   return (
-    <svg viewBox="0 0 12 12" fill="none" aria-hidden style={back ? { transform: 'scaleX(-1)' } : undefined}>
+    <svg viewBox="0 0 12 12" fill="none" aria-hidden>
       <path d="M1.5 6h9M6.5 2l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" />
     </svg>
   )
@@ -64,8 +69,20 @@ export function Work() {
   /** What had the focus when the preview was opened. */
   const opener = useRef<HTMLElement | null>(null)
   const [inView, setInView] = useState(false)
-  /** True from the first time the section is within a screen and a half of the viewport: only then is the gallery fetched and started. */
+  /**
+   * True from the visitor's first mouse movement, scroll, touch, press or key, or from the first time the section is within a
+   * screen and a half of the viewport, whichever comes first: only then is the gallery fetched and made ready. The
+   * section is several screens down, so it is ready long before anyone gets there, and a page that is only looked
+   * at (as a speed test does) never pays for it.
+   */
   const [near, setNear] = useState(false)
+  /** True once the gallery has its pictures on the graphics card and can draw at once; until then a skeleton stands in. */
+  const [ready, setReady] = useState(false)
+  const markReady = useCallback(() => {
+    setReady(true)
+    // The photos of the side scroll and the footer's letters start now (see lib/ready.ts).
+    markGalleryReady()
+  }, [])
   const [active, setActive] = useState(0)
   /** The project the row starts on: the one named in the address (?work=slug), or the last one looked at in this visit. */
   const [start, setStart] = useState(0)
@@ -87,15 +104,16 @@ export function Work() {
     const element = section.current!
     const observer = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), { threshold: 0.2 })
     observer.observe(element)
-    const approach = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return
-        setNear(true)
-        approach.disconnect()
-      },
-      { rootMargin: '150% 0px' },
-    )
+    // A mouse that moves counts too: on a computer that is the first sign of a visitor, well before any scroll.
+    const WAKE = ['pointermove', 'scroll', 'wheel', 'touchstart', 'pointerdown', 'keydown'] as const
+    const wake = () => {
+      WAKE.forEach((name) => window.removeEventListener(name, wake, true))
+      approach.disconnect()
+      setNear(true)
+    }
+    const approach = new IntersectionObserver(([entry]) => entry.isIntersecting && wake(), { rootMargin: '150% 0px' })
     approach.observe(element)
+    WAKE.forEach((name) => window.addEventListener(name, wake, { capture: true, passive: true }))
     const resize = new ResizeObserver(() => setWin(openWindow(element.clientWidth, element.clientHeight)))
     resize.observe(element)
 
@@ -119,6 +137,7 @@ export function Work() {
       cancelAnimationFrame(recall)
       observer.disconnect()
       approach.disconnect()
+      WAKE.forEach((name) => window.removeEventListener(name, wake, true))
       resize.disconnect()
     }
   }, [])
@@ -147,7 +166,7 @@ export function Work() {
   useEffect(() => {
     if (!open) return
     const element = section.current
-    if (element) window.scrollTo({ top: element.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' })
+    if (element) window.scrollTo({ top: element.getBoundingClientRect().top + window.scrollY, behavior: reducedMotion() ? 'instant' : 'smooth' })
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setOpen(false)
     }
@@ -203,6 +222,10 @@ export function Work() {
       data-theme="dark"
       data-open={open}
       data-flat={showing}
+      data-ready={ready || undefined}
+      data-in={inView || undefined}
+      data-slide={active + 1}
+      data-slides={work.length}
       aria-roledescription="carousel"
       aria-label="Selected work"
       onFocus={() => (paused.current = true)}
@@ -222,7 +245,16 @@ export function Work() {
         role="group"
         aria-label="The row of projects. Drag it, or use the left and right arrow keys."
       >
+        {/* Stands in for the gallery until it can draw: the shapes of the panels, in the section's own charcoal. */}
+        <div className="work-skeleton" aria-hidden>
+          <i />
+          <i>
+            <b />
+          </i>
+          <i />
+        </div>
         <GalleryBoundary
+          onFail={markReady}
           fallback={
             <ul className="work-plain">
               {work.map((entry) => (
@@ -238,7 +270,7 @@ export function Work() {
         >
           {near ? (
             <Suspense fallback={null}>
-              <Gallery sites={sites} stage={stage} inView={inView} open={open} initial={start} api={api} paused={paused} onActive={onActive} onOpen={onOpen} onFlat={onFlat} />
+              <Gallery sites={sites} stage={stage} inView={inView} open={open} initial={start} api={api} paused={paused} onActive={onActive} onOpen={onOpen} onFlat={onFlat} onReady={markReady} />
             </Suspense>
           ) : null}
         </GalleryBoundary>
@@ -253,43 +285,13 @@ export function Work() {
       </div>
 
       {/* Under the row: where the row is, one line about the project, the three ways in, and what he did on it. */}
+      {/* Under the row, only one way in: the project's own page. The row is moved by dragging or with the arrow keys. */}
       <div className="work-foot" inert={open} onPointerEnter={() => (paused.current = true)} onPointerLeave={() => (paused.current = false)}>
-        <div className="work-nav">
-          <button type="button" aria-label="Previous project" onClick={() => api.current?.step(-1)}>
-            <Chevron back />
-          </button>
-          <p aria-hidden>
-            {two(active + 1)} / {two(work.length)}
-          </p>
-          <button type="button" aria-label="Next project" onClick={() => api.current?.step(1)}>
-            <Chevron />
-          </button>
-        </div>
-
-        <div key={item.slug} className="work-story">
-          <p className="work-tagline">{item.tagline}</p>
-          <p className="work-actions">
-            <a className="work-primary" href={`/work/${item.slug}`} aria-label={`Read the ${item.title} case study`}>
-              <span data-wide>Read case study</span>
-              <span data-narrow>Case study</span>
-              <Chevron />
-            </a>
-            <button type="button" onClick={onOpen} aria-label={`${site.live ? 'Live preview' : 'Preview'} of ${item.title}, opens in a window on this page`}>
-              <span data-wide>{site.live ? 'Live preview' : 'Preview'}</span>
-              <span data-narrow>Preview</span>
-            </button>
-            <a href={site.url} target="_blank" rel="noopener noreferrer" aria-label={`Visit ${site.domain}, opens in a new tab`}>
-              <span data-wide>Visit live</span>
-              <span data-narrow>Visit</span>
-              <span aria-hidden>↗</span>
-            </a>
-          </p>
-        </div>
-
-        <p key={`${item.slug}-meta`} className="work-meta">
-          <span>{item.role}</span>
-          <span>{item.status}</span>
-        </p>
+        <a className="work-primary" href={`/work/${item.slug}`}>
+          Read case study
+          <span className="sr-only">: {item.title}</span>
+          <Chevron />
+        </a>
       </div>
 
       {/* The opened window: a bar, and under it the site itself, laid exactly over the flattened panel. */}
@@ -344,7 +346,14 @@ export function Work() {
               </>
             ) : (
               <div className="work-still">
-                <img src={site.long} alt={`A picture of ${site.domain}, the whole first page.`} draggable={false} />
+                <img
+                  src={site.long.src}
+                  width={site.long.width}
+                  height={site.long.height}
+                  alt={`A picture of ${site.domain}, the whole first page.`}
+                  decoding="async"
+                  draggable={false}
+                />
                 <p>
                   This is a picture: {site.domain} does not allow itself to be shown inside another page from this address.{' '}
                   <a href={site.url} target="_blank" rel="noopener noreferrer">

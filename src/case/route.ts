@@ -1,6 +1,6 @@
 import { hero } from '../content/hero'
 import { profile } from '../content/profile'
-import { work, workBySlug, type Work } from '../content/work'
+import { work, workBySlug, type Work } from '../content/cases'
 
 /**
  * Which page an address shows, and what goes in that page's <head>. The
